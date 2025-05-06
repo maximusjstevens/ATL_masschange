@@ -207,6 +207,7 @@ class MERRA_remap:
 
         for dv in dsALL.data_vars: # get rid of non-ice M2 pixels to not use for remapping
             dsALL[dv] = dsALL[dv].where((ds_constants['FRLANDICE'].isel(time=0))>0.95,np.nan)
+        print(f'{dsALL_fn} loaded.')
         ###############################
 
         ###############################
@@ -221,6 +222,7 @@ class MERRA_remap:
             atl15_10k = rioxarray.merge.merge_datasets(ds_l_10)
             for key in list(atl15_10k.keys()):
                 atl15_10k[key].rio.write_nodata(np.nan, inplace=True)
+        print('ATL15 loaded.')
         ############################### 
 
         ###############################
@@ -310,7 +312,7 @@ class MERRA_remap:
 if __name__ == '__main__':
     
     remap_type='bilinear'
-    icesheet='AIS'
+    icesheet='GrIS'
     print(f'ice sheet is {icesheet}')
     freq='4h'
 
@@ -334,7 +336,7 @@ if __name__ == '__main__':
 
     LLbounds = dict(((k,eval(k)) for k in ('lat_min','lat_max','lon_min','lon_max')))
 
-    out_path = pathlib.Path(os.getenv('NOBACKUP'),f'climate/MERRA2/{icesheet}')
+    out_path = pathlib.Path(os.getenv('NOBACKUP'),f'climate/MERRA2/{icesheet}_test')
     if os.path.exists(out_path):
         pass
     else:
