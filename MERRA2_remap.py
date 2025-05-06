@@ -38,7 +38,6 @@ import time
 import pickle
 import re
 import dateutil.parser as dparser
-import pathlib
 import subprocess as sub
 from scipy.spatial import KDTree
 import cartopy.crs as ccrs
@@ -185,6 +184,12 @@ class MERRA_remap:
         else:
             freq_name = freq
 
+        out_path_plus = Path(out_path,f'netCDF/{freq_name}')
+        if os.path.exists(out_path_plus):
+            pass
+        else:
+            os.makedirs(out_path_plus)
+
         tnow = time.time() #time it
 
         print(YY) # year
@@ -193,7 +198,7 @@ class MERRA_remap:
         ### Load subsetted MERRA-2 data
         subPath = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/subsets/{icesheet}')
         dsALL_fn = f'M2_{icesheet}_{YY}.nc'
-        f_subset = pathlib.Path(subPath,dsALL_fn) 
+        f_subset = Path(subPath,dsALL_fn) 
         
         if os.path.exists(f_subset): # has been subsetted.
             dsALL = xr.open_dataset(f_subset)
@@ -217,8 +222,8 @@ class MERRA_remap:
             for key in list(atl15_10k.keys()):
                 atl15_10k[key].rio.write_nodata(np.nan, inplace=True)
         elif icesheet=='AIS':
-            p_atl15 = pathlib.Path('/discover/nobackup/cdsteve2/IS2_data/ATL15/')
-            ds_l_10 = [IS2view.io.from_file(pathlib.Path(p_atl15,f'ATL15_A{ii}_0324_10km_004_03.nc'),group='delta_h') for ii in [1,2,3,4]]
+            p_atl15 = Path('/discover/nobackup/cdsteve2/IS2_data/ATL15/')
+            ds_l_10 = [IS2view.io.from_file(Path(p_atl15,f'ATL15_A{ii}_0324_10km_004_03.nc'),group='delta_h') for ii in [1,2,3,4]]
             atl15_10k = rioxarray.merge.merge_datasets(ds_l_10)
             for key in list(atl15_10k.keys()):
                 atl15_10k[key].rio.write_nodata(np.nan, inplace=True)
@@ -336,7 +341,7 @@ if __name__ == '__main__':
 
     LLbounds = dict(((k,eval(k)) for k in ('lat_min','lat_max','lon_min','lon_max')))
 
-    out_path = pathlib.Path(os.getenv('NOBACKUP'),f'climate/MERRA2/{icesheet}_test')
+    out_path = Path(os.getenv('NOBACKUP'),f'climate/MERRA2/{icesheet}_test')
     if os.path.exists(out_path):
         pass
     else:
