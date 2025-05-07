@@ -240,10 +240,10 @@ class MERRA_remap:
             
             if lapserate:
                 ds_M2_T = dsALL[['TS','TScalc','T2M']]
-                T_interp = self.T_lapserate(self,ds_M2_T,atl15_10k,icesheet)
+                T_interp = self.T_lapserate(ds_M2_T,atl15_10k,icesheet)
                 for _kk, _vv in T_interp.items():
-                    ds_M2_10k[f'{_vv}_i'] = (['y','x','time'],_vv)
-                    ds_M2_10k[f'{_vv}_i'] = ds_M2_10k[f'{_vv}_i'].T.astype('float32')
+                    ds_M2_10k[f'{_kk}'] = (['y','x','time'],_vv)
+                    ds_M2_10k[f'{_kk}'] = ds_M2_10k[f'{_kk}'].T.astype('float32')
             
             fn_out_bil_remap = Path(out_path,f'netCDF/{freq}',f'MERRA2_{icesheet}_{freq}_{YY}_10Kgrid_bilinear.nc')
             ds_M2_10k.to_netcdf(fn_out_bil_remap) # save just the non-conserved, resampled variables 
@@ -276,10 +276,10 @@ class MERRA_remap:
                 
                 if lapserate:
                     ds_M2_T = dsALL[['TS','TScalc','T2M']]
-                    T_interp = self.T_lapserate(self,ds_M2_T,atl15_10k,icesheet)
+                    T_interp = self.T_lapserate(ds_M2_T,atl15_10k,icesheet)
                     for _kk, _vv in T_interp.items():
-                        ds_M2_10k[f'{_vv}_i'] = (['y','x','time'],_vv)
-                        ds_M2_10k[f'{_vv}_i'] = ds_M2_10k[f'{_vv}_i'].T.astype('float32')            
+                        ds_M2_10k[f'{_kk}'] = (['y','x','time'],_vv)
+                        ds_M2_10k[f'{_kk}'] = ds_M2_10k[f'{_kk}'].T.astype('float32')            
             
                 if save_noc:
                     ds_M2_10k.to_netcdf(out_full_noc_rem) # save just the non-conserved, resampled variables
@@ -351,5 +351,5 @@ if __name__ == '__main__':
     ykey = int(sys.argv[1])
     YY = int(year_list[ykey])
     Mc = MERRA_remap()
-    Mc.M2remap(icesheet,LLbounds,out_path,YY,freq=freq)
+    Mc.M2remap(icesheet,LLbounds,out_path,YY,freq=freq,remap_type=remap_type,lapserate=True)
     print(f'Done with making yearly files with {freq} resolution.')
