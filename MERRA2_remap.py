@@ -7,6 +7,13 @@
 # christopher.d.stevens-1@nasa.gov
 #
 
+NOTE: THIS IS AN OLDER SCRIPT FOR INTERPOLATION.
+IT WORKS AND WILL DO A BILINEAR INTERPOLATION (USING RIOXARRAY)
+OR CONSERVATIVE (USING CDO TOOLS);
+HOWEVER, THE UP-TO-DATE SCRIPT IS M2_resample_bil.py,
+WHICH USES CDO TOOLS TO DO A BILINEAR INTERPOLATION AND
+A CONVOLUTION TO ENSURE PERIPHERIAL PIXELS ARE INCLUDED.
+
 Updates:
 25/04: edited so that now there is a separate script to run prior to this one that
 does the MERRA2 subsetting for the year/region.
