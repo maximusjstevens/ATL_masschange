@@ -132,7 +132,7 @@ def grid_to_IS2(icesheet,_ecode=None):
                 _timestamp = pd.to_datetime(datetime.datetime.strptime(dt_string, '%Y%m%d').date())
                 with xr.open_dataset(_fn) as f_glc: 
                     if _ii==0: 
-                        glc_vars = [_x for _x in ds_glc.variables if 'time' in ds_glc[_x].dims]
+                        glc_vars = [_x for _x in f_glc.variables if 'time' in f_glc[_x].dims]
                         ds_glc = initialize_ds(y_g,x_g,_date_range,glc_vars)
                     
                     df1 = f_glc.to_dataframe()
@@ -158,7 +158,7 @@ def grid_to_IS2(icesheet,_ecode=None):
                 _timestamp = pd.to_datetime(datetime.datetime.strptime(dt_string, '%Y%m%d').date())
                 with xr.open_dataset(_fn) as f_lfs: 
                     if _ii==0: 
-                        lfs_vars = [_x for _x in ds_lfs.variables if 'time' in ds_lfs[_x].dims]
+                        lfs_vars = [_x for _x in f_lfs.variables if 'time' in f_lfs[_x].dims]
                         ds_lfs = initialize_ds(y_g,x_g,_date_range,lfs_vars)
                     
                     df1 = f_lfs.to_dataframe()
