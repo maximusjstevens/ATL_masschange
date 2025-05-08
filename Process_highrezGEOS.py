@@ -108,6 +108,7 @@ def grid_to_IS2(icesheet,_ecode=None):
 
     pHR = Path('/discover/nobackup/projects/gmao/polarm/lcandre2/outputs_long/LLI_M2_02_C1440_1980_1990/output/C1440x6C_GLOBAL/cat/ens0000')
     for YYYY in np.arange(1981,1990):
+        print(YYYY)
         out_path = Path('/discover/nobackup/cdsteve2/climate/LDAS_highres/LDAS_outputs')
         fn_out_yearly = f'LDAS_IS2_10km_daily_{YYYY}.nc'
         ds_monthly = []
