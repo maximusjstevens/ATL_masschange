@@ -15,8 +15,8 @@ where XXXX is the year to resample
 or use slurm array with M2_bilinear_cdo.j:
 sbatch --array=1980-2024 M2_bilinear_cdo.j
 
-Took about 2 hours in test from command line on 
-discover head node.
+For antarctica:
+Took about 2 hours in test from command line on discover head node.
 Less than an hour (35 min?) when run on a compute node with slurm
 '''
 
@@ -110,7 +110,7 @@ class cdo_bil:
             
             af.to_netcdf(infile) # this is just a temporary file with the MERRA-2 gridding but the non-ice pixels crop and the convolution applied; this is used for the remapping.
            
-        outfile = f'/discover/nobackup/cdsteve2/climate/MERRA2/AIS_FRICE/netCDF/4h/AIS_remapped_bil_{YY}_conv.nc'        
+        outfile = f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}/netCDF/4h/M2_{icesheet}_{YY}_ATL15-10k_bil_conv.nc'        
         
         sub.call(["cdo",f"remapbil,/discover/nobackup/cdsteve2/ATL_masschange/downscale/ATL15_10km_{icesheet}_gridfile.txt",infile,outfile])
 
