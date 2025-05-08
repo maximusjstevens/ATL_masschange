@@ -73,17 +73,19 @@ class cdo_bil:
             dss.load()  # load data to ensure we can use it after closing each original file
         return dss  
     
-    def cdo_resample(self, YY, LLbounds):
+    def cdo_resample(self, YY, LLbounds,icesheet):
 
         cfile = '/discover/nobackup/projects/gmao/merra2/data/products/MERRA2_all/MERRA2.const_2d_asm_Nx.00000000.nc4' # MERRA2 constants
         clist = ['FRLANDICE']
         ds_constants = self.read_merra_constants(cfile,LLbounds,clist)
     
-        icesheet = 'AIS'
-        atl15 = xr.open_dataset('/discover/nobackup/cdsteve2/ATL_masschange/ATL15_AIS_0324_10km_004_03_merged.nc')
+        # if icesheet == 'AIS':
+        #     atl15 = xr.open_dataset('/discover/nobackup/cdsteve2/ATL_masschange/ATL15_AIS_0324_10km_004_03_merged.nc')
+        # elif icesheet=='GrIS':
+        #     atl15 = xr.open_dataset('/discover/nobackup/cdsteve2/IS2_data/ATL15/ATL15_GL_0324_10km_004_03.nc',group='delta_h')
         
-        all_file = f'/discover/nobackup/cdsteve2/climate/MERRA2/AIS_FRICE/netCDF/4h/dsALL_{YY}.nc'
-        infile = f'/discover/nobackup/cdsteve2/climate/MERRA2/AIS_FRICE/netCDF/4h/dsALL_{YY}_crop_conv.nc'
+        all_file = f'/discover/nobackup/cdsteve2/climate/MERRA2/subsets/{icesheet}/M2_{icesheet}_{YY}.nc'
+        infile = f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}/netCDF/4h/M2_{icesheet}_{YY}_crop_conv.nc'
 
         with xr.open_dataset(all_file) as af_in:
             af = af_in.copy()
@@ -106,7 +108,7 @@ class cdo_bil:
                     af[dv].loc[dict(time=tt)] = xr.where(ds_X.notnull(),ds_X,af['_tc']).values
                     af = af.drop_vars(["_tc"])
             
-            af.to_netcdf(infile)
+            af.to_netcdf(infile) # this is just a temporary file with the MERRA-2 gridding but the non-ice pixels crop and the convolution applied; this is used for the remapping.
            
         outfile = f'/discover/nobackup/cdsteve2/climate/MERRA2/AIS_FRICE/netCDF/4h/AIS_remapped_bil_{YY}_conv.nc'        
         
@@ -119,15 +121,23 @@ if __name__ == '__main__':
     print(f'start_time: {start_time}')
     YY=int(sys.argv[1])
 
-    lat_min=-90
-    lat_max=-60
-    lon_min=-180
-    lon_max=180
+    icesheet='GrIS'
+
+    if icesheet=='GrIS':
+        lat_min=55
+        lat_max=90
+        lon_min=-80
+        lon_max=-10
+    elif icesheet=='AIS':
+        lat_min=-90
+        lat_max=-60
+        lon_min=-180
+        lon_max=180
     
     LLbounds = dict(((k,eval(k)) for k in ('lat_min','lat_max','lon_min','lon_max')))
     
     cdo=cdo_bil()
-    cdo.cdo_resample(YY,LLbounds)
+    cdo.cdo_resample(YY,LLbounds,icesheet)
     finish_time = time.time()
     total_time = finish_time-start_time
     print('finished!')

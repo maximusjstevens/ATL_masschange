@@ -173,7 +173,7 @@ def grid_to_IS2(icesheet,YYYY,_ecode=None):
         ds_combined = ds_lfs.merge(ds_glc)
         ds_monthly.append(ds_combined)
         iter_time = (time.time() - start_time)/60
-        print(f'iteration time: {}')
+        print(f'iteration time: {iter_time}')
     ds_year = xr.concat(ds_monthly, dim='time').sortby('time')
     ds_year.to_netcdf(Path(out_path,fn_out_yearly))
 
