@@ -64,6 +64,7 @@ def initialize_ds(y_g,x_g,_date_range,_vars):
 
 def grid_to_IS2(icesheet,YYYY,_ecode=None):
 
+    start_time = time.time()
     if icesheet=='GrIS':
         _ecode = "EPSG:3413"
         atl15_10k = xr.open_dataset(f'/discover/nobackup/cdsteve2/IS2_data/ATL15/ATL15_GL_0318_10km_003_01.nc',group='delta_h').rio.write_crs(input_crs="EPSG:3413")
@@ -103,6 +104,8 @@ def grid_to_IS2(icesheet,YYYY,_ecode=None):
     fn_out_yearly = f'LDAS_IS2_10km_daily_{YYYY}.nc'
     ds_monthly = []
     for MM in np.arange(1,13):
+        print(MM, flush=True)
+        
         _YM = f'{YYYY}-{MM}'
         _date_range = pd.date_range(_YM,pd.to_datetime(_YM) + pd.offsets.MonthEnd(n=0))
 
@@ -169,6 +172,8 @@ def grid_to_IS2(icesheet,YYYY,_ecode=None):
         
         ds_combined = ds_lfs.merge(ds_glc)
         ds_monthly.append(ds_combined)
+        iter_time = (time.time() - start_time)/60
+        print(f'iteration time: {}')
     ds_year = xr.concat(ds_monthly, dim='time').sortby('time')
     ds_year.to_netcdf(Path(out_path,fn_out_yearly))
 
