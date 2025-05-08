@@ -12,13 +12,8 @@ from GEOS-LDAS and interpolate them onto the ICESat-2
 grid.
 '''
 
-import math, cmath
 import numpy as np
-# from numba import jit
-# import netCDF4 as nc
-# import h5py as h5
 import datetime
-# import s3fs
 import xarray as xr
 import pandas as pd
 import calendar
@@ -26,26 +21,21 @@ import os
 import sys
 import glob
 import time
-import pickle
 import re
 import dateutil.parser as dparser
-import matplotlib.pyplot as plt
-# import zarr
+
 from pathlib import Path
-import json
-import zarr
 
 import geopandas as gpd
 import rioxarray as rx               # Package to read raster data from hdf5 files
 import rioxarray.merge
 import pyproj #import Transformer, CRS, Proj  # libraries to allow coordinate transforms
 import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-import cartopy.io.shapereader as shapereader
-from shapely.geometry import LineString,Point,mapping, Polygon, box
-import gc
+# import cartopy.feature as cfeature
+# import cartopy.io.shapereader as shapereader
+# from shapely.geometry import LineString,Point,mapping, Polygon, box
 import struct
-import re
+
 import IS2view
 
 from scipy.interpolate import griddata
@@ -72,7 +62,7 @@ def initialize_ds(y_g,x_g,_date_range,_vars):
 
     return ds_
 
-def grid_to_IS2(icesheet,_ecode=None):
+def grid_to_IS2(icesheet,YYYY,_ecode=None):
 
     if icesheet=='GrIS':
         _ecode = "EPSG:3413"
@@ -107,85 +97,92 @@ def grid_to_IS2(icesheet,_ecode=None):
     transformer = pyproj.Transformer.from_crs("EPSG:4326", _ecode)
 
     pHR = Path('/discover/nobackup/projects/gmao/polarm/lcandre2/outputs_long/LLI_M2_02_C1440_1980_1990/output/C1440x6C_GLOBAL/cat/ens0000')
-    for YYYY in np.arange(1981,1990):
-        print(YYYY)
-        out_path = Path('/discover/nobackup/cdsteve2/climate/LDAS_highres/LDAS_outputs')
-        fn_out_yearly = f'LDAS_IS2_10km_daily_{YYYY}.nc'
-        ds_monthly = []
-        for MM in np.arange(1,13):
-            _YM = f'{YYYY}-{MM}'
-            _date_range = pd.date_range(_YM,pd.to_datetime(_YM) + pd.offsets.MonthEnd(n=0))
+    # for YYYY in np.arange(1981,1990):
+    print(YYYY)
+    out_path = Path('/discover/nobackup/cdsteve2/climate/LDAS_highres/LDAS_outputs')
+    fn_out_yearly = f'LDAS_IS2_10km_daily_{YYYY}.nc'
+    ds_monthly = []
+    for MM in np.arange(1,13):
+        _YM = f'{YYYY}-{MM}'
+        _date_range = pd.date_range(_YM,pd.to_datetime(_YM) + pd.offsets.MonthEnd(n=0))
 
-            fn_glc = f'LLI_M2_02_C1440_1980_1990.tavg24_1d_glc_Nt.{YYYY}{MM:02d}*_1200z.nc4'
-            pF_glc = Path(pHR,f'Y{YYYY}/M{MM:02d}')
-            flist_glc = sorted([_x for _x in pF_glc.glob(fn_glc)])
+        fn_glc = f'LLI_M2_02_C1440_1980_1990.tavg24_1d_glc_Nt.{YYYY}{MM:02d}*_1200z.nc4'
+        pF_glc = Path(pHR,f'Y{YYYY}/M{MM:02d}')
+        flist_glc = sorted([_x for _x in pF_glc.glob(fn_glc)])
 
-            fn_lfs = f'LLI_M2_02_C1440_1980_1990.tavg24_1d_lfs_Nt.{YYYY}{MM:02d}*_1200z.nc4'
-            pF_lfs = Path(pHR,f'Y{YYYY}/M{MM:02d}')
-            flist_lfs = sorted([_x for _x in pF_lfs.glob(fn_lfs)])
+        fn_lfs = f'LLI_M2_02_C1440_1980_1990.tavg24_1d_lfs_Nt.{YYYY}{MM:02d}*_1200z.nc4'
+        pF_lfs = Path(pHR,f'Y{YYYY}/M{MM:02d}')
+        flist_lfs = sorted([_x for _x in pF_lfs.glob(fn_lfs)])
 
-            ds_temp = atl15_10k.isel(time=0).copy()
-            ###########################
-            ### glc outputs
-            for _ii, _fn in enumerate(flist_glc): # loop through all of the daily files for the month
-                dt_string = re.search(r'\d{4}\d{2}\d{2}',str(_fn)).group()
-                _timestamp = pd.to_datetime(datetime.datetime.strptime(dt_string, '%Y%m%d').date())
-                with xr.open_dataset(_fn) as f_glc: 
-                    if _ii==0: 
-                        glc_vars = [_x for _x in f_glc.variables if 'time' in f_glc[_x].dims]
-                        ds_glc = initialize_ds(y_g,x_g,_date_range,glc_vars)
-                    
-                    df1 = f_glc.to_dataframe()
-                    ### need to configure below for regions
-                    df3 = df1[df1['lat']>58].copy()
-                    df3 = df3[((df3['lon']>-70) & (df3['lon']<-15))]
-                    ###
-                    df3['x_t'], df3['y_t'] = transformer.transform(df3['lat'].tolist(), df3['lon'].tolist())
-                    data_points = df3[['x_t','y_t']].values
-                    
-                    for _var in glc_vars:
-                        gridded_data = griddata(data_points,df3[_var].values,(atlX,atlY),method='linear')            
-                        ds_temp['dummy'] = (['y','x'],gridded_data)
-                        ds_temp['dummy'] = ds_temp['dummy'].where(ds_temp['ice_area']>0)
-                        ds_glc[_var].loc[{'time':_timestamp}] = ds_temp['dummy']
-            ### end for glc
-            ###########################                        
+        ds_temp = atl15_10k.isel(time=0).copy()
+        ###########################
+        ### glc outputs
+        for _ii, _fn in enumerate(flist_glc): # loop through all of the daily files for the month
+            dt_string = re.search(r'\d{4}\d{2}\d{2}',str(_fn)).group()
+            _timestamp = pd.to_datetime(datetime.datetime.strptime(dt_string, '%Y%m%d').date())
+            with xr.open_dataset(_fn) as f_glc: 
+                if _ii==0: 
+                    glc_vars = [_x for _x in f_glc.variables if 'time' in f_glc[_x].dims]
+                    ds_glc = initialize_ds(y_g,x_g,_date_range,glc_vars)
+                
+                df1 = f_glc.to_dataframe()
+                ### need to configure below for regions
+                df3 = df1[df1['lat']>58].copy()
+                df3 = df3[((df3['lon']>-70) & (df3['lon']<-15))]
+                ###
+                df3['x_t'], df3['y_t'] = transformer.transform(df3['lat'].tolist(), df3['lon'].tolist())
+                data_points = df3[['x_t','y_t']].values
+                
+                for _var in glc_vars:
+                    gridded_data = griddata(data_points,df3[_var].values,(atlX,atlY),method='linear')            
+                    ds_temp['dummy'] = (['y','x'],gridded_data)
+                    ds_temp['dummy'] = ds_temp['dummy'].where(ds_temp['ice_area']>0)
+                    ds_glc[_var].loc[{'time':_timestamp}] = ds_temp['dummy']
+        ### end for glc
+        ###########################                        
 
-            ###########################
-            ### lfs ouputs 
-            for _ii, _fn in enumerate(flist_lfs): # loop through all of the daily files for the month
-                dt_string = re.search(r'\d{4}\d{2}\d{2}',str(_fn)).group()
-                _timestamp = pd.to_datetime(datetime.datetime.strptime(dt_string, '%Y%m%d').date())
-                with xr.open_dataset(_fn) as f_lfs: 
-                    if _ii==0: 
-                        lfs_vars = [_x for _x in f_lfs.variables if 'time' in f_lfs[_x].dims]
-                        ds_lfs = initialize_ds(y_g,x_g,_date_range,lfs_vars)
-                    
-                    df1 = f_lfs.to_dataframe()
-                    ### need to configure below for regions
-                    df3 = df1[df1['lat']>58].copy()
-                    df3 = df3[((df3['lon']>-70) & (df3['lon']<-15))]
-                    ###
-                    df3['x_t'], df3['y_t'] = transformer.transform(df3['lat'].tolist(), df3['lon'].tolist())
-                    data_points = df3[['x_t','y_t']].values
-                    
-                    for _var in lfs_vars:
-                        gridded_data = griddata(data_points,df3[_var].values,(atlX,atlY),method='linear')            
-                        ds_temp['dummy'] = (['y','x'],gridded_data)
-                        ds_temp['dummy'] = ds_temp['dummy'].where(ds_temp['ice_area']>0)
-                        ds_lfs[_var].loc[{'time':_timestamp}] = ds_temp['dummy']
-            ### end for lfs
-            ###########################
-            
-            ds_combined = ds_lfs.merge(ds_glc)
-            ds_monthly.append(ds_combined)
-        ds_year = xr.concat(ds_monthly, dim='time').sortby('time')
-        ds_year.to_netcdf(Path(out_path,fn_out_yearly))
+        ###########################
+        ### lfs ouputs 
+        for _ii, _fn in enumerate(flist_lfs): # loop through all of the daily files for the month
+            dt_string = re.search(r'\d{4}\d{2}\d{2}',str(_fn)).group()
+            _timestamp = pd.to_datetime(datetime.datetime.strptime(dt_string, '%Y%m%d').date())
+            with xr.open_dataset(_fn) as f_lfs: 
+                if _ii==0: 
+                    lfs_vars = [_x for _x in f_lfs.variables if 'time' in f_lfs[_x].dims]
+                    ds_lfs = initialize_ds(y_g,x_g,_date_range,lfs_vars)
+                
+                df1 = f_lfs.to_dataframe()
+                ### need to configure below for regions
+                df3 = df1[df1['lat']>58].copy()
+                df3 = df3[((df3['lon']>-70) & (df3['lon']<-15))]
+                ###
+                df3['x_t'], df3['y_t'] = transformer.transform(df3['lat'].tolist(), df3['lon'].tolist())
+                data_points = df3[['x_t','y_t']].values
+                
+                for _var in lfs_vars:
+                    gridded_data = griddata(data_points,df3[_var].values,(atlX,atlY),method='linear')            
+                    ds_temp['dummy'] = (['y','x'],gridded_data)
+                    ds_temp['dummy'] = ds_temp['dummy'].where(ds_temp['ice_area']>0)
+                    ds_lfs[_var].loc[{'time':_timestamp}] = ds_temp['dummy']
+        ### end for lfs
+        ###########################
+        
+        ds_combined = ds_lfs.merge(ds_glc)
+        ds_monthly.append(ds_combined)
+    ds_year = xr.concat(ds_monthly, dim='time').sortby('time')
+    ds_year.to_netcdf(Path(out_path,fn_out_yearly))
 
-        ### end month loop  
-    ### end year loop
-
+    ### end month loop  
 
 if __name__=='__main__':
     icesheet='GrIS'
-    grid_to_IS2(icesheet)
+    year_list = np.arange(1981,1990)
+    i_yr = int(sys.argv[1])
+    YYYY = year_list[i_yr]
+    
+    grid_to_IS2(icesheet,YYYY)
+
+
+
+
+
