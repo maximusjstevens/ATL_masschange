@@ -50,9 +50,6 @@ from scipy.ndimage import gaussian_filter
 # import pyproj
 # from rasterio.enums import Resampling
 from pathlib import Path
-# import gc 
-
-# cdo remapbil,/discover/nobackup/cdsteve2/ATL_masschange/downscale/ATL15_10km_AIS_gridfile.txt dsALL_2020.nc test_bil.nc
 
 class cdo_bil:
     
@@ -112,7 +109,7 @@ class cdo_bil:
            
         outfile = f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}/netCDF/4h/M2_{icesheet}_{YY}_ATL15-10k_bil_conv.nc'        
         
-        sub.call(["cdo",f"remapbil,/discover/nobackup/cdsteve2/ATL_masschange/downscale/ATL15_10km_{icesheet}_gridfile.txt",infile,outfile])
+        sub.call(["cdo",f"remapbil,/discover/nobackup/cdsteve2/IS2_data/gridfiles/ATL15_10km_{icesheet}_gridfile.txt",infile,outfile])
 
         os.remove(infile)
 

@@ -1,17 +1,27 @@
 #!/usr/bin/env python
 '''
-# MERRA_makezarr_discover_masschange.py
+climate_netcdf_to_zarr.py
 
-# Author: C. Max Stevens (@maximusjstevens)
-# christopher.d.stevens-1@nasa.gov
-#
-# This script takes the annual, subsetted MERRA-2 files (netCDFs)
-# and combines them into a zarr.
-# 
-# First run MERRA_concat...py
-# make sure that .../zarr directory exists
-# Then run this script.
-# Then, each zarr needs to be zipped. (old?)
+Author: C. Max Stevens (@maximusjstevens)
+christopher.d.stevens-1@nasa.gov
+
+This script takes yearly climate data files 
+and combines them into a zarr.
+
+Specifically, this script is designed to work with the MERRA-2
+(possibly other) yearly files that have been regridded onto the 
+ATL15 10km grid.
+
+For file size management, this script creates a zarr zip store 
+for each decade (e.g., the 1980 file has data from 1-1-1980 to 12-31-1989)
+
+climate netCDFs come from:
+/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}/netCDF/4h
+
+and go to:
+/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}/zarr
+
+Then, each zarr needs to be zipped. (old?)
 
 This script now uses a zarr.Storage.zipstore for the to_zarr write, 
 thereby removing the need to create a zarr and zip (as discussed here:
@@ -40,42 +50,17 @@ import time
 import pickle
 import re
 import dateutil.parser as dparser
-import pathlib
+from pathlib import Path
 import subprocess as sub
 
 class make_zarr:
     '''
     class to take the freq resolution files (one for each year), 
     combine them and save as zarr
-    optionally can save a big netCDF will all years in one file.
+    optionally can save a big netCDF will all years in one very large file (not recommended).
     '''
     def __init__(self):
         pass
-
-#     def read_freq_netcdfs(self,files):
-#         def process_one_path(path):
-#             print(path)
-#             with xr.open_dataset(path) as ds:
-#                 ds.load()
-#                 return ds
-#         paths = sorted(files)
-#         datasets = [process_one_path(p) for p in paths]
-#         combined = xr.concat(datasets, dim='time').sortby('time')
-#         return combined
-
-#     def read_merra_constants(self, cfile, LLbounds, clist):
-#         '''
-#         get the MERRA2 constants
-#         '''
-#         lat_max = LLbounds['lat_max']
-#         lat_min = LLbounds['lat_min']
-#         lon_max = LLbounds['lon_max']
-#         lon_min = LLbounds['lon_min']
-
-#         with xr.open_dataset(cfile) as ds:
-#             dss = ds.sel({'lat': slice(lat_min,lat_max),'lon': slice(lon_min,lon_max)})[clist]
-#             dss.load()  # load data to ensure we can use it after closing each original file
-#         return dss
 
     def make_zarr(self,icesheet,LLbounds,out_path,d_in,saveZarr=True,saveBigNC=False,freq='1D'):
         
@@ -87,8 +72,11 @@ class make_zarr:
         dlist = [d_in]
         for decade in dlist:
             print(decade)
-            zarr_name = pathlib.Path(f'M2_{icesheet}_{freq_name}_IS2mc_{decade}0.zarr')
-            zarr_full = pathlib.Path(out_path,'zarr',zarr_name)
+            zarr_name = Path(f'M2_{icesheet}_{freq_name}_IS2mc_{decade}0.zarr')
+            zarr_dir  = Path(out_path,'zarr')
+            zarr_dir.mkdir(parents=True,exist_ok=True)
+
+            zarr_full = Path(zarr_dir,zarr_name)
             
             if decade=='202': # assume we want to remake the 2020 zarr when we run this. 
                 try:
@@ -100,13 +88,11 @@ class make_zarr:
                 print('zarr exists. will not remake.')
                 continue
 
-            # b_rem_path = pathlib.Path('/discover/nobackup/projects/icesat2/firn/ATL_masschange/CFM_forcing/AIS')
-            b_rem_path = pathlib.Path('/discover/nobackup/cdsteve2/climate/MERRA2/AIS_FRICE') # Path to yearly netcdfs
+            netcdf_path = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}') # Path to yearly netcdfs that will go into zarr.
 
-            # AIS_remapped_bil_2024.nc
-            allYearlyFiles = sorted(glob.glob(str(pathlib.Path(b_rem_path,'netCDF/4h',f'{icesheet}_remapped_*{decade}*conv.nc'))))
-            # allYearlyFiles = sorted(glob.glob(str(pathlib.Path(b_rem_path,'netCDF/4h',f'MERRA2_{icesheet}_{freq_name}_*{decade}*_remapped.nc'))))
-                
+            allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,'netCDF/4h',f'{icesheet}_remapped_*{decade}*conv.nc'))))
+            ### allYearlyFiles is a list of the netCDFs for a certain decade.
+
             with xr.open_mfdataset(allYearlyFiles,chunks=-1,parallel=True) as dsALL:            
                 try:
                     dsALL = dsALL.drop_vars(['polar_Stereographic','spatial_ref'])
@@ -114,7 +100,7 @@ class make_zarr:
                     pass
                 try:
                     for vv in ['TS_i','T2M_i','TScalc_i']:
-                        dsALL[vv] = dsALL[vv].transpose("time",'y','x')
+                        dsALL[vv] = dsALL[vv].transpose("time",'y','x') # this is an artifact of the netCDF-making process
                 except:
                     pass
 
@@ -131,25 +117,20 @@ class make_zarr:
 
 if __name__ == '__main__':
     
-    cmd = 'module list'
-    pp = sub.Popen(cmd, shell=True, stderr = sub.STDOUT, stdout = sub.PIPE).communicate()[0]
-    if 'cdo' not in str(pp):
-        print('cdo not loaded. Remapping will not happen.')
-    
-    icesheet='AIS'
+    icesheet='GrIS'
     freq='4h'
 
-    dkey = int(sys.argv[1]) # this is the array value
+    try:
+        dkey = int(sys.argv[1]) # this is the array value
+    except:
+        dkey = 0
+        print(f'no decade specified; using {dkey}') 
     
     if icesheet=='GrIS':
         lat_min=55
         lat_max=90
         lon_min=-80
         lon_max=-10
-        # lat_min=62
-        # lat_max=68
-        # lon_min=-50
-        # lon_max=-42
     elif icesheet=='AIS':
         lat_min=-90
         lat_max=-60
@@ -158,8 +139,9 @@ if __name__ == '__main__':
 
     LLbounds = dict(((k,eval(k)) for k in ('lat_min','lat_max','lon_min','lon_max')))
 
-    # out_path = pathlib.Path(os.getenv('NOBACKUP'),f'climate/MERRA2/{icesheet}_FRICE')
-    out_path = pathlib.Path('/discover/nobackup/projects/icesat2/firn/ATL_masschange/CFM_forcing/AIS/')
+    # out_path = Path(f'/discover/nobackup/projects/icesat2/firn/ATL_masschange/CFM_forcing/{icesheet}/')
+    out_path = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}')
+    
     if os.path.exists(out_path):
         pass
     else:
