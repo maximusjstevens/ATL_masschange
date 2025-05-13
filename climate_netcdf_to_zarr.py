@@ -90,7 +90,7 @@ class make_zarr:
 
             netcdf_path = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}') # Path to yearly netcdfs that will go into zarr.
 
-            allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,'netCDF/4h',f'{icesheet}_remapped_*{decade}*conv.nc'))))
+            allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,'netCDF/4h',f'*{icesheet}*{decade}*conv.nc'))))
             ### allYearlyFiles is a list of the netCDFs for a certain decade.
 
             with xr.open_mfdataset(allYearlyFiles,chunks=-1,parallel=True) as dsALL:            
@@ -142,11 +142,6 @@ if __name__ == '__main__':
     # out_path = Path(f'/discover/nobackup/projects/icesat2/firn/ATL_masschange/CFM_forcing/{icesheet}/')
     out_path = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}')
     
-    if os.path.exists(out_path):
-        pass
-    else:
-        os.makedirs(out_path)
-    #allyears = np.arange(1980,2025) # years to resample
     dlist_in = ['198','199','200','201','202']
     d_in = dlist_in[dkey]
     print(f'Now making zarr for {d_in}.')
