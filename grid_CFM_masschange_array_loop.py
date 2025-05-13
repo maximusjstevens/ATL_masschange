@@ -101,7 +101,11 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
     if runloc=='azure':
         if icesheet=='AIS':
             rdir = Path(f'/mnt/firnadls/CFM_outputs/{icesheet}_{quad}')
-            rmid = f'CFMresults_{quad}_{vv}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
+            if 'add' in quad: #A1_add, A4_add, A1_add_2
+                qq = quad.split('_')[0]
+                rmid = f'CFMresults_{qq}_{vv}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
+            else:
+                rmid = f'CFMresults_{quad}_{vv}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
         else:
             rdir = Path(f'/mnt/firnadls/CFM_outputs/{icesheet}')
             rmid = f'CFMresults_{vv}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
@@ -301,7 +305,7 @@ if __name__ == '__main__':
     if icesheet=='GrIS':
         quad=None
     else:
-        quad='A1'
+        quad='A2'
         
     zarr_name = f'CFM_gridded_{icesheet}'
 
@@ -334,6 +338,21 @@ if __name__ == '__main__':
             ### --array=0-183 for sbatch
             if iend == 36800:
                 iend = 36892
+        elif quad=='A1_add':
+            ### 3614 pixels
+            ### --array=0-17 for sbatch
+            if iend == 3600:
+                iend = 3614
+        elif quad=='A4_add':
+            ### 2008 pixels
+            ### --array=0-9 for sbatch
+            if iend == 2000:
+                iend = 2008
+        elif quad=='A1_add_2':
+            ### 554 pixels
+            ### --array=0-2
+            if iend == 600:
+                iend = 554
 
     iarray = np.arange(istart,iend)
 
