@@ -351,14 +351,14 @@ if __name__ == '__main__':
 
     # configName = f'CFMconfig_{y_w}_{x_w}.json'
     configName = f'CFMconfig_{icesheet}_{dkey}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}.json'
-    configPath_in = 'json/'+configName
+    configPath_in = Path(CFM_path,'json',configName)
     shutil.copyfile(config_in, configPath_in)
     
     if os.path.isfile(os.path.join(c['resultsFolder'],configName)):
         CFMconfig = os.path.join(c['resultsFolder'],configName)
         if os.path.isfile(os.path.join(os.getcwd(), configPath_in)):
             os.remove(os.path.join(os.getcwd(), configPath_in))
-        shutil.move(CFMconfig, Path(os.getcwd(),'json'))
+        shutil.move(CFMconfig, Path(CFM_path,'json'))
     else:
         CFMconfig = configPath_in     
     
