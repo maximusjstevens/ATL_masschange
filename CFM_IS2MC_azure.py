@@ -43,6 +43,7 @@ if 'disc' in hh:
     runloc = 'discover'
 else:
     runloc = 'azure'
+print(runloc)
 
 
 ### make sure to edit this to ensure CFM is in pypath
