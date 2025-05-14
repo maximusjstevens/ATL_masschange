@@ -20,7 +20,7 @@ import socket
 CFM_IS2MC_azure.py
 =======
 This file configures and runs the CFM.
-- It goes in CFM_main 
+- It goes in CFM_main (changing this...) 
 - input climate data come from a zarr with 4h MERRA-2
 - (the merra-2 data are  preprocessed for this purpose)
 - this script creates a .json configuration file
@@ -37,8 +37,19 @@ run this script using:
 import sys
 import os
 
+hh = socket.gethostname()
+global runloc
+if 'disc' in hh:
+    runloc = 'discover'
+else:
+    runloc = 'azure'
+
+
 ### make sure to edit this to ensure CFM is in pypath
-sys.path.insert(0, 'CommunityFirnModel/CFM_main')
+if runloc=='discover':
+    sys.path.insert(0, '/discover/nobackup/cdsteve2/ATL_masschange/CommunityFirnModel/CFM_main')
+elif runloc=='azure':
+    sys.path.insert(0, '/shared/home/cdsteve2/CommunityFirnModel/CFM_main')
 
 # from firn_density_spin import FirnDensitySpin
 from firn_density_nospin import FirnDensityNoSpin
@@ -47,7 +58,7 @@ import json
 import shutil
 import RCMpkl_to_spin as RCM
 
-def MERRA2_zarr_to_dataframe(y_int,x_int,icesheet,zarr_source='azure'):
+def MERRA2_zarr_to_dataframe(y_int,x_int,icesheet,zarr_source=runloc):
     '''
     Create a pandas dataframe for a site in Greenland or Antarctica
     returns:
@@ -140,11 +151,12 @@ if __name__ == '__main__':
     ### x_int = -54042
     ### y_int = -2579982
     ### point in IS2_icepixels.csv: 6304
-    hh = socket.gethostname()
-    if 'disc' in hh:
-        runloc = 'discover'
-    else:
-        runloc = 'azure'
+
+    # hh = socket.gethostname()
+    # if 'disc' in hh:
+    #     runloc = 'discover'
+    # else:
+    #     runloc = 'azure'
 
     icesheet = 'AIS'
         
@@ -164,7 +176,7 @@ if __name__ == '__main__':
         c          = json.loads(jsonString) 
 
     c['runloc'] = runloc
-    quad = 'A4'
+    quad = 'A1'
     c['quad'] = quad 
 
     if c['runloc'] == 'azure':
@@ -174,8 +186,9 @@ if __name__ == '__main__':
     
     elif c['runloc'] == 'discover':
         zarr_source = 'discover'
+        pixel_path = Path('/discover/nobackup/cdsteve2/ATL_masschange/pixels_to_run')
         # ll_list = np.genfromtxt(Path(CFM_path,f'IS2_icepixels_{icesheet}.csv'),delimiter=',',skip_header=1)
-        ll_list = np.genfromtxt(Path(CFM_path,f'IS2_pixelstorun_{icesheet}_{quad}.csv'),delimiter=',',skip_header=1)
+        ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}_add.csv'),delimiter=',',skip_header=1)
     
     if c['runloc']=='local':
         x_int = c['x_val']
@@ -208,7 +221,7 @@ if __name__ == '__main__':
         # c['resultspath'] = '/shared/firndata/CFM_outputs' # previous GrIS outputs
         c['resultspath'] = f'/shared/home/cdsteve2/firnadls/CFM_outputs/{icesheet}_{quad}_add_2' # cheaper to put on alds
     elif runloc == 'discover':
-        c['resultspath'] = f'/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/{icesheet}'
+        c['resultspath'] = f'/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/{icesheet}_{quad}'
 
     # c['resultsFolder'] = c['resultspath'] + c['results_ext'] + rf_po
     c['resultsFolder'] = str(Path(c['resultspath'], rf_po))
