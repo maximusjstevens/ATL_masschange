@@ -305,7 +305,7 @@ if __name__ == '__main__':
     if icesheet=='GrIS':
         quad=None
     else:
-        quad='A2'
+        quad='A1_add_2'
         
     zarr_name = f'CFM_gridded_{icesheet}'
 
