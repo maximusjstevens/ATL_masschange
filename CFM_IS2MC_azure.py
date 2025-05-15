@@ -41,16 +41,19 @@ hh = socket.gethostname()
 global runloc
 if 'disc' in hh:
     runloc = 'discover'
+elif 'gs615-meltwater' in hh:
+    runloc = 'local'
 else:
     runloc = 'azure'
 print(runloc)
-
 
 ### make sure to edit this to ensure CFM is in pypath
 if runloc=='discover':
     sys.path.insert(0, '/discover/nobackup/cdsteve2/ATL_masschange/CommunityFirnModel/CFM_main')
 elif runloc=='azure':
     sys.path.insert(0, '/shared/home/cdsteve2/CommunityFirnModel/CFM_main')
+elif runloc=='local':
+    sys.path.insert(0, '/Users/cdsteve2/research/firn/CommunityFirnModel/CFM_main')
 
 # from firn_density_spin import FirnDensitySpin
 from firn_density_nospin import FirnDensityNoSpin
@@ -169,8 +172,13 @@ if __name__ == '__main__':
         CFM_path = Path('/discover/nobackup/cdsteve2/ATL_masschange/CommunityFirnModel/CFM_main')
     elif runloc == 'azure':
         CFM_path = Path('/shared/home/cdsteve2/CommunityFirnModel/CFM_main/')
+    elif runloc == 'local':
+        CFM_path = Path('/Users/cdsteve2/research/firn/CommunityFirnModel/CFM_main')
 
-    config_in = Path(CFM_path,'HPC_config_default.json')
+    if runloc!='local':
+        config_in = Path(CFM_path,'HPC_config_default.json')
+    else:
+        config_in = Path('/Users/cdsteve2/research/ATL_masschange','HPC_config_default.json')
 
     with open(config_in, "r") as f:
         jsonString      = f.read()
@@ -190,15 +198,21 @@ if __name__ == '__main__':
         pixel_path = Path('/discover/nobackup/cdsteve2/ATL_masschange/pixels_to_run')
         # ll_list = np.genfromtxt(Path(CFM_path,f'IS2_icepixels_{icesheet}.csv'),delimiter=',',skip_header=1)
         ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}_add.csv'),delimiter=',',skip_header=1)
+
+    elif c['runloc'] == 'local':
+        zarr_source = runloc
+        pixel_path = Path('/Users/cdsteve2/research/ATL_masschange/pixels_to_run')
+        # ll_list = np.genfromtxt(Path(CFM_path,f'IS2_icepixels_{icesheet}.csv'),delimiter=',',skip_header=1)
+        ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}_add.csv'),delimiter=',',skip_header=1)
     
-    if c['runloc']=='local':
-        x_int = c['x_val']
-        y_int = c['y_val']
-    else:
-        print(f'pixel number: {sys.argv[1]}')
-        dkey = int(sys.argv[1]) # this is the array value
-        x_int = float(ll_list[dkey][0])
-        y_int = float(ll_list[dkey][1])
+    # if c['runloc']=='local':
+    #     x_int = c['x_val']
+    #     y_int = c['y_val']
+    # else:
+    print(f'pixel number: {sys.argv[1]}')
+    dkey = int(sys.argv[1]) # this is the array value
+    x_int = float(ll_list[dkey][0])
+    y_int = float(ll_list[dkey][1])
 
     if np.isnan(y_int):
         print('y_int is nan')
@@ -223,6 +237,10 @@ if __name__ == '__main__':
         c['resultspath'] = f'/shared/home/cdsteve2/firnadls/CFM_outputs/{icesheet}_{quad}_add_2' # cheaper to put on alds
     elif runloc == 'discover':
         c['resultspath'] = f'/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/{icesheet}_{quad}'
+    elif runloc == 'local':
+        c['resultspath'] = f'/Users/cdsteve2/research/ATL_masschange/CFMoutputs/{icesheet}_{quad}'
+
+    Path(c['resultspath']).mkdir(parents=True, exist_ok=True)
 
     # c['resultsFolder'] = c['resultspath'] + c['results_ext'] + rf_po
     c['resultsFolder'] = str(Path(c['resultspath'], rf_po))
@@ -235,7 +253,21 @@ if __name__ == '__main__':
         sys.exit()
 
     ### Get climate data from zarr
-    ii,jj,y_val,x_val,df_daily = MERRA2_zarr_to_dataframe(y_int,x_int,icesheet,zarr_source=zarr_source)
+    if runloc != 'local':
+        ii,jj,y_val,x_val,df_daily = MERRA2_zarr_to_dataframe(y_int,x_int,icesheet,zarr_source=zarr_source)
+        write_df = False
+    else: 
+        ### local requires first building the csv from a run on discover or azure (zarr too large for local)
+        ii=-9999
+        jj=-9999
+        x_val=x_int
+        y_val=y_int
+        df_daily = pd.read_csv(Path('/Users/cdsteve2/research/ATL_masschange/CFMforcing',f'CFMforcing_df_{dkey}.csv'),index_col=0,parse_dates=True)
+        write_df = False # This stays false
+
+    if write_df:
+        df_daily.to_csv(f'CFMforcing_df_{int(runid)}.csv')
+
     ### spin date end is inclusive, so e.g. if sde is 2019, it goes to 12/31/19
     if icesheet=='GrIS':
         sds = 1980.0 #spin date start
@@ -275,7 +307,6 @@ if __name__ == '__main__':
 
     #######
 
-
     c['y_int'] = float(y_int)
     c['x_int'] = float(x_int)
     c['y_val'] = float(y_val)
@@ -300,11 +331,10 @@ if __name__ == '__main__':
     # print(f'sebf_keys:{SEBfluxes.keys()}')
     # print(len(SEBfluxes['time']))
     
-    write_df = True
-    if write_df:
-        i_dec = np.where(SEBfluxes['time']>=sds)[0]
-        df_daily['dectime'] = SEBfluxes['time'][i_dec]
-        df_daily.to_csv(f'CFMforcing_df_{runid}.csv')
+    # if write_df:
+    #     i_dec = np.where(SEBfluxes['time']>=sds)[0]
+    #     df_daily['dectime'] = SEBfluxes['time'][i_dec]
+    #     df_daily.to_csv(f'CFMforcing_df_{int(runid)}.csv')
     
     i1 = np.where(climateTS['time']==sds)[0][0]
     i2 = np.where(climateTS['time']==sde+1)[0][0]
