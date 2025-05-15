@@ -306,6 +306,7 @@ if __name__ == '__main__':
         quad=None
     else:
         quad='A1_add_2'
+    custom_run=True
         
     zarr_name = f'CFM_gridded_{icesheet}'
 
@@ -353,8 +354,17 @@ if __name__ == '__main__':
             ### --array=0-2
             if iend == 600:
                 iend = 554
-
+            
     iarray = np.arange(istart,iend)
+
+    if custom_run:
+        print('GRIDDING CUSTOM SUBSET')
+        ### build custom code here
+        ### generally, icesheet and quad need to be the same as above
+        ### import a list of pixel numbers from that quad that need to be gridded
+        _df = pd.read_csv('missing_lists/missing_lists/missing_spin_A4_0508.txt',header=None)
+        iarray = np.array(_df[0].values)
+    ### end custom
 
     result_5d_list = []
     result_1d_list = []

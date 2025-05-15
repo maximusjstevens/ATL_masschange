@@ -300,7 +300,7 @@ if __name__ == '__main__':
     # print(f'sebf_keys:{SEBfluxes.keys()}')
     # print(len(SEBfluxes['time']))
     
-    write_df = False
+    write_df = True
     if write_df:
         i_dec = np.where(SEBfluxes['time']>=sds)[0]
         df_daily['dectime'] = SEBfluxes['time'][i_dec]
