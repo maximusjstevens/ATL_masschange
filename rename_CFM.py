@@ -20,12 +20,16 @@ from pathlib import Path
 import json
 import os
 import traceback
+import shutil
 
 def rename_CFM():
+
+    to_change_name = 'AIS_A1_add_2'
+    quad = to_change_name.split('_')[1]
     
     ### lists of pixels. Change as needed
-    px_dest = pd.read_csv('pixels_to_run/IS2_pixelstorun_AIS_A1_add.csv') # new numbers (we will remap to these) 
-    px_source = pd.read_csv('pixels_to_run/IS2_pixelstorun_AIS_A1_add_2.csv') # current numbering
+    px_dest = pd.read_csv(f'/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_AIS_{quad}_full.csv') # new numbers (we will remap to these) 
+    px_source = pd.read_csv(f'/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_{to_change_name}.csv') # current numbering
 
     ### keep track of indices in the dataframes before merge
     px_dest['_i_dest'] = px_dest.index 
@@ -39,14 +43,16 @@ def rename_CFM():
     df_sel['_i_source'] = df_sel['_i_source'].astype(int)
 
     ### path with directory/json names that need to be changed.
-    p_tochange = Path('/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/AIS_A1_add_2')
+    p_tochange = Path(f'/shared/home/cdsteve2/firnadls/CFM_outputs/{to_change_name}')
+    err_dir = Path(p_tochange,'errors')
+    err_dir.mkdir(exist_ok=True)
 
     for ii,rw in df_sel.iterrows():
         # print(rw['_i_x'])
         # print(rw['_i_y'])
         try:
             ### change below as needed!
-            old_dir = f'CFMresults_A1_{ii}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
+            old_dir = f'CFMresults_{quad}_{ii}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
             old_json = f'CFMconfig_AIS_{ii}_GSFC2020_LW-EMIS_eff_ALB-M2_interp.json'
 
             ### just a check that we are dealing with the correct pixel
@@ -66,6 +72,7 @@ def rename_CFM():
                 print('not renaming.')
                 print(f'x_val: {x_val_j}, xM: {xM}')
                 print(f'y_val: {y_val_j}, yM: {yM}')
+                shutil.move(Path(p_tochange,old_dir),Path(err_dir,old_dir))
             else:
                 new_dir = f'CFMresults_A1_{rw["_i_x"]}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
                 new_json = f'CFMconfig_AIS_{rw["_i_x"]}_GSFC2020_LW-EMIS_eff_ALB-M2_interp.json'
