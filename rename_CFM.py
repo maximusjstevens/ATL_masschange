@@ -46,10 +46,10 @@ def rename_CFM():
     p_tochange = Path(f'/shared/home/cdsteve2/firnadls/CFM_outputs/{to_change_name}')
     err_dir = Path(p_tochange,'errors')
     err_dir.mkdir(exist_ok=True)
+    renamed_dir = Path(p_tochange,'renamed') 
+    renamed_dir.mkdir(exist_ok=True)
 
     for ii,rw in df_sel.iterrows():
-        # print(rw['_i_x'])
-        # print(rw['_i_y'])
         try:
             ### change below as needed!
             old_dir = f'CFMresults_{quad}_{ii}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
@@ -66,6 +66,8 @@ def rename_CFM():
         
             xM = rw['x']
             yM = rw['y']
+
+            new_px = rw['_i_dest']
         
             if ((xM!=x_val_j) or (yM!=y_val_j)):
                 print('x or y values do not match')
@@ -74,11 +76,12 @@ def rename_CFM():
                 print(f'y_val: {y_val_j}, yM: {yM}')
                 shutil.move(Path(p_tochange,old_dir),Path(err_dir,old_dir))
             else:
-                new_dir = f'CFMresults_A1_{rw["_i_x"]}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
-                new_json = f'CFMconfig_AIS_{rw["_i_x"]}_GSFC2020_LW-EMIS_eff_ALB-M2_interp.json'
+                new_dir = f'CFMresults_A1_{new_px}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
+                new_json = f'CFMconfig_AIS_{new_px}_GSFC2020_LW-EMIS_eff_ALB-M2_interp.json'
                 
                 os.rename(Path(p_tochange,old_dir,old_json), Path(p_tochange,old_dir,new_json))
                 os.rename(Path(p_tochange,old_dir), Path(p_tochange,new_dir))
+                shutil.move(Path(p_tochange,new_dir),Path(renamed_dir,new_dir))
         except Exception:
             print(f'Error with {ii}')
             print(rw)
