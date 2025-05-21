@@ -395,10 +395,14 @@ if __name__ == '__main__':
     with open(configPath_in,'w+') as fp:
         fp.write(json.dumps(c,sort_keys=True, indent=4, separators=(',', ': ')))
 
-    if 'NewSpin' in c:
-        NewSpin = c['NewSpin']
-    else:
-        NewSpin = False
+    if runloc != 'local':
+        if 'NewSpin' in c:
+            NewSpin = c['NewSpin']
+        else:
+            NewSpin = False
+    else: ### probably want new spin if debugging on local, or at least easy control here.
+        NewSpin=True
+
 
     ### Create CFM instance by passing config file and forcing data, then run the model
     print('Configuring complete. Starting run.')
