@@ -255,7 +255,7 @@ if __name__ == '__main__':
     ### Get climate data from zarr
     if runloc != 'local':
         ii,jj,y_val,x_val,df_daily = MERRA2_zarr_to_dataframe(y_int,x_int,icesheet,zarr_source=zarr_source)
-        write_df = True
+        write_df = False
     else: 
         ### local requires first building the csv from a run on discover or azure (zarr too large for local)
         ii=-9999
