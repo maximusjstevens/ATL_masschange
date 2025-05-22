@@ -191,13 +191,13 @@ if __name__ == '__main__':
     if c['runloc'] == 'azure':
         zarr_source = 'azure'
         # ll_list = np.genfromtxt(Path(CFM_path,f'IS2_icepixels_{icesheet}.csv'),delimiter=',',skip_header=1)
-        ll_list = np.genfromtxt(Path(CFM_path,f'IS2_pixelstorun_{icesheet}_{quad}.csv'),delimiter=',',skip_header=1)
+        ll_list = np.genfromtxt(Path(CFM_path,f'IS2_pixelstorun_{icesheet}_{quad}_full.csv'),delimiter=',',skip_header=1)
     
     elif c['runloc'] == 'discover':
         zarr_source = 'discover'
         pixel_path = Path('/discover/nobackup/cdsteve2/ATL_masschange/pixels_to_run')
         # ll_list = np.genfromtxt(Path(CFM_path,f'IS2_icepixels_{icesheet}.csv'),delimiter=',',skip_header=1)
-        ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}_add.csv'),delimiter=',',skip_header=1)
+        ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}_full.csv'),delimiter=',',skip_header=1)
 
     elif c['runloc'] == 'local':
         zarr_source = runloc
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     #     y_int = c['y_val']
     # else:
     print(f'pixel number: {sys.argv[1]}')
-    dkey = int(sys.argv[1]) # this is the array value
+    dkey = int(sys.argv[1]) # this is the pixel number
     x_int = float(ll_list[dkey][0])
     y_int = float(ll_list[dkey][1])
 
@@ -230,11 +230,11 @@ if __name__ == '__main__':
     c['physRho'] = "GSFC2020"
     c['spinUpdate'] = True
 
-    rf_po = f'CFMresults_{quad}_{dkey}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}' #results path
+    rf_po = f'CFMresults_{quad}_{dkey}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}' #results directory name
 
     if runloc == 'azure':
         # c['resultspath'] = '/shared/firndata/CFM_outputs' # previous GrIS outputs
-        c['resultspath'] = f'/shared/home/cdsteve2/firnadls/CFM_outputs/{icesheet}_{quad}_add_2' # cheaper to put on alds
+        c['resultspath'] = f'/shared/home/cdsteve2/firnadls/CFM_outputs/{icesheet}_{quad}' # cheaper to put on alds
     elif runloc == 'discover':
         c['resultspath'] = f'/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/{icesheet}_{quad}'
     elif runloc == 'local':

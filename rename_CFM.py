@@ -24,7 +24,7 @@ import shutil
 
 def rename_CFM():
 
-    to_change_name = 'AIS_A1_add_2'
+    to_change_name = 'AIS_A4'
     quad = to_change_name.split('_')[1]
     
     ### lists of pixels. Change as needed
@@ -80,8 +80,8 @@ def rename_CFM():
                 new_json = f'CFMconfig_AIS_{new_px}_GSFC2020_LW-EMIS_eff_ALB-M2_interp.json'
                 
                 os.rename(Path(p_tochange,old_dir,old_json), Path(p_tochange,old_dir,new_json))
-                os.rename(Path(p_tochange,old_dir), Path(p_tochange,new_dir))
-                shutil.move(Path(p_tochange,new_dir),Path(renamed_dir,new_dir))
+                # os.rename(Path(p_tochange,old_dir), Path(p_tochange,new_dir))
+                shutil.move(Path(p_tochange,old_dir),Path(renamed_dir,new_dir))
         except Exception:
             print(f'Error with {ii}')
             print(rw)
