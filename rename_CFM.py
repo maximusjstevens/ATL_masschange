@@ -76,7 +76,7 @@ def rename_CFM():
                 print(f'y_val: {y_val_j}, yM: {yM}')
                 shutil.move(Path(p_tochange,old_dir),Path(err_dir,old_dir))
             else:
-                new_dir = f'CFMresults_A1_{new_px}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
+                new_dir = f'CFMresults_{quad}_{new_px}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
                 new_json = f'CFMconfig_AIS_{new_px}_GSFC2020_LW-EMIS_eff_ALB-M2_interp.json'
                 
                 os.rename(Path(p_tochange,old_dir,old_json), Path(p_tochange,old_dir,new_json))

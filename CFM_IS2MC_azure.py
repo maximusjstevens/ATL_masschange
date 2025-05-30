@@ -111,7 +111,7 @@ def MERRA2_zarr_to_dataframe(y_int,x_int,icesheet,zarr_source=runloc):
     for decade in decades:
         if zarr_source=='discover':
             if icesheet=='GrIS':
-                zarr_path = Path("/discover/nobackup/cdsteve2/climate/MERRA2/GrIS_emis/zarr/")
+                zarr_path = Path("/discover/nobackup/cdsteve2/climate/MERRA2/remapped/GrIS/zarr")
             elif icesheet=='AIS':
                 zarr_path = Path("/discover/nobackup/projects/icesat2/firn/ATL_masschange/CFM_forcing/AIS/zarr")    
         elif zarr_source=='azure':
@@ -185,30 +185,33 @@ if __name__ == '__main__':
         c          = json.loads(jsonString) 
 
     c['runloc'] = runloc
-    quad = 'A1'
+    quad = 'A4'
     c['quad'] = quad 
 
     if c['runloc'] == 'azure':
         zarr_source = 'azure'
-        # ll_list = np.genfromtxt(Path(CFM_path,f'IS2_icepixels_{icesheet}.csv'),delimiter=',',skip_header=1)
-        ll_list = np.genfromtxt(Path(CFM_path,f'IS2_pixelstorun_{icesheet}_{quad}_full.csv'),delimiter=',',skip_header=1)
+        if icesheet=='AIS':
+            ll_list = np.genfromtxt(Path(CFM_path,f'IS2_pixelstorun_{icesheet}_{quad}_full.csv'),delimiter=',',skip_header=1)
+        elif icesheet=='GrIS':
+            ll_list = np.genfromtxt(Path(CFM_path,f'IS2_pixelstorun_GrIS.csv'),delimiter=',',skip_header=1)
     
     elif c['runloc'] == 'discover':
         zarr_source = 'discover'
         pixel_path = Path('/discover/nobackup/cdsteve2/ATL_masschange/pixels_to_run')
-        # ll_list = np.genfromtxt(Path(CFM_path,f'IS2_icepixels_{icesheet}.csv'),delimiter=',',skip_header=1)
-        ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}_full.csv'),delimiter=',',skip_header=1)
+        if icesheet=='AIS':
+            ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}_full.csv'),delimiter=',',skip_header=1)
+        elif icesheet=='GrIS':
+            ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}.csv'),delimiter=',',skip_header=1)        
 
     elif c['runloc'] == 'local':
         zarr_source = runloc
         pixel_path = Path('/Users/cdsteve2/research/ATL_masschange/pixels_to_run')
         # ll_list = np.genfromtxt(Path(CFM_path,f'IS2_icepixels_{icesheet}.csv'),delimiter=',',skip_header=1)
-        ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}_add.csv'),delimiter=',',skip_header=1)
+        if icesheet=='AIS':
+            ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}_add.csv'),delimiter=',',skip_header=1)
+        elif icesheet=='GrIS':
+            ll_list =  np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}.csv'),delimiter=',',skip_header=1)
     
-    # if c['runloc']=='local':
-    #     x_int = c['x_val']
-    #     y_int = c['y_val']
-    # else:
     print(f'pixel number: {sys.argv[1]}')
     dkey = int(sys.argv[1]) # this is the pixel number
     x_int = float(ll_list[dkey][0])
@@ -230,15 +233,28 @@ if __name__ == '__main__':
     c['physRho'] = "GSFC2020"
     c['spinUpdate'] = True
 
-    rf_po = f'CFMresults_{quad}_{dkey}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}' #results directory name
-
+    rhos = 350
+    c['rhos0'] = rhos
+    
+    rf_po = f'CFMresults_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}_{rhos}' #results directory name
+    # rf_po = f'CFMresults_{quad}_{dkey}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}_{rhos}' #results directory name
+    
     if runloc == 'azure':
-        # c['resultspath'] = '/shared/firndata/CFM_outputs' # previous GrIS outputs
-        c['resultspath'] = f'/shared/home/cdsteve2/firnadls/CFM_outputs/{icesheet}_{quad}' # cheaper to put on alds
+        
+        if icesheet=='AIS':
+            c['resultspath'] = f'/shared/home/cdsteve2/firnadls/CFM_outputs/{icesheet}_{quad}' # cheaper to put on alds
+        elif icesheet=='GrIS':
+            c['resultspath'] = f'/shared/home/cdsteve2/firnadls/CFM_outputs/{icesheet}' # cheaper to put on alds
     elif runloc == 'discover':
-        c['resultspath'] = f'/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/{icesheet}_{quad}'
+        if icesheet=='AIS':
+            c['resultspath'] = f'/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/{icesheet}_{quad}'
+        elif icesheet=='GrIS':
+            c['resultspath'] = f'/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/{icesheet}'
     elif runloc == 'local':
-        c['resultspath'] = f'/Users/cdsteve2/research/ATL_masschange/CFMoutputs/{icesheet}_{quad}'
+        if icesheet=='AIS':
+            c['resultspath'] = f'/Users/cdsteve2/research/ATL_masschange/CFMoutputs/{icesheet}_{quad}'
+        elif icesheet=='GrIS':
+            c['resultspath'] = f'/Users/cdsteve2/research/ATL_masschange/CFMoutputs/{icesheet}'
 
     Path(c['resultspath']).mkdir(parents=True, exist_ok=True)
 
@@ -253,10 +269,10 @@ if __name__ == '__main__':
         sys.exit()
 
     ### Get climate data from zarr
-    if runloc != 'local':
+    if runloc != 'local': #NOT local
         ii,jj,y_val,x_val,df_daily = MERRA2_zarr_to_dataframe(y_int,x_int,icesheet,zarr_source=zarr_source)
-        write_df = False
-    else: 
+        write_df = False # set to true if you want to have DF written (useful for debugging)
+    else: #running on local
         ### local requires first building the csv from a run on discover or azure (zarr too large for local)
         ii=-9999
         jj=-9999
@@ -296,7 +312,7 @@ if __name__ == '__main__':
     df_spy = 365.25*24*3600 / (df_daily.index.to_series().diff()).dt.total_seconds().mean()
     print(f'stepsperyear (az): {df_spy}')
     
-    c['bdm_sublim'] = True
+    c['bdm_sublim'] = True #True is include sublim in bdot_mean
     
     if c['bdm_sublim']:
         bdot_mean = ((df_daily['BDOT']+(df_daily['SUBLIM']))*df_spy/917).mean()
@@ -325,16 +341,6 @@ if __name__ == '__main__':
         RCM.makeSpinFiles(df_daily,timeres=c['DFresample'],Tinterp='mean',spin_date_st = sds, 
         spin_date_end = sde,melt=c['MELT'],desired_depth = None,SEB=c['SEB'],rho_bottom=rho_bottom,calc_melt=calc_melt,bdm_sublim=c['bdm_sublim']))
     print('spin file made')
-
-    # print(f'climateTS_keys:{climateTS.keys()}')
-    # print(len(climateTS['time']))
-    # print(f'sebf_keys:{SEBfluxes.keys()}')
-    # print(len(SEBfluxes['time']))
-    
-    # if write_df:
-    #     i_dec = np.where(SEBfluxes['time']>=sds)[0]
-    #     df_daily['dectime'] = SEBfluxes['time'][i_dec]
-    #     df_daily.to_csv(f'CFMforcing_df_{int(runid)}.csv')
     
     i1 = np.where(climateTS['time']==sds)[0][0]
     i2 = np.where(climateTS['time']==sde+1)[0][0]
@@ -345,12 +351,16 @@ if __name__ == '__main__':
     climateTS['sde'] = sde
     climateTS['num_reps'] = num_reps
 
+    # c["grid_outputs"] = False
+    # print('Not gridding outputs!')
+    # depth_S1 = 10
+    
     c["stpsPerYear"] = float('%.2f' % (StpsPerYr))
     c["stpsPerYearSpin"] = float('%.2f' % (StpsPerYr))
     c["grid1bottom"] = float('%.1f' %(depth_S1))
     c["grid2bottom"] = float('%.1f' %(depth_S2))
     c["HbaseSpin"] = float('%.1f' %(3000 - grid_bottom))
-    
+
     ####
     if bdot_mean>=0.15:
         print('one')
@@ -380,7 +390,7 @@ if __name__ == '__main__':
     c["NewSpin"] = False
 
     # configName = f'CFMconfig_{y_w}_{x_w}.json'
-    configName = f'CFMconfig_{icesheet}_{dkey}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}.json'
+    configName = f'CFMconfig_{icesheet}_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}.json'
     configPath_in = Path(CFM_path,'json',configName)
     shutil.copyfile(config_in, configPath_in)
     
