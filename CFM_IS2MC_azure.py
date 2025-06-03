@@ -185,7 +185,7 @@ if __name__ == '__main__':
         c          = json.loads(jsonString) 
 
     c['runloc'] = runloc
-    quad = 'A4'
+    quad = 'A1'
     c['quad'] = quad 
 
     if c['runloc'] == 'azure':
@@ -365,6 +365,12 @@ if __name__ == '__main__':
     if bdot_mean>=0.15:
         print('one')
         pass
+    elif bdot_mean<0.01:
+        print('onepointfive')
+        c["grid1bottom"] = min(0.2,depth_S1)
+        c["grid2bottom"] = min(2,depth_S2)
+        c['nodestocombine'] = 360 
+        c['multnodestocombine'] = 12
     elif ((bdot_mean>0.06) & (bdot_mean<0.15)):
         print('two')
         c["grid1bottom"] = min(3,depth_S1)

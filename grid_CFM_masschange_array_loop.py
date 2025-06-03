@@ -116,7 +116,7 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
         if icesheet=='GrIS':
             pt_path = Path('/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_icepixels_GrIS.csv')
         elif icesheet=='AIS':
-            pt_path = Path(f'/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_AIS_{quad}.csv')
+            pt_path = Path(f'/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_AIS_{quad}_full.csv')
     
     elif runloc=='local':
         rdir = Path(f'/Users/cdsteve2/research/ATL_masschange/CFM_outputs')
@@ -302,11 +302,18 @@ if __name__ == '__main__':
     ii = int(sys.argv[1])
     print('ii',ii)
     icesheet='AIS'
+    
     if icesheet=='GrIS':
         quad=None
+    
     else:
-        quad='A1_add_2'
-    custom_run=True
+        if len(sys.argv)>2:
+            quad=sys.argv[2]
+        else:
+            quad='A1'
+            print(f'Quad is {quad}.')
+    
+    custom_run=False
         
     zarr_name = f'CFM_gridded_{icesheet}'
 
@@ -320,41 +327,26 @@ if __name__ == '__main__':
             iend = 20013
     elif icesheet=='AIS':
         if quad=='A1':
-            ### 32295 pixels
-            ### --array=0-160 for sbatch
-            if iend == 32200:
-                iend = 32295
+            ### 35909 pixels
+            ### --array=0-179 for sbatch (istart = 35800)
+            if iend == 36000:
+                iend = 35909
         elif quad=='A2':
             ### 27283 pixels
-            ### --array=0-135 for sbatch
-            if iend == 27200:
+            ### --array=0-136 for sbatch (istart = 27200)
+            if iend == 27400:
                 iend = 27283
         elif quad=='A3':
             ### 20130 pixels
-            ### --array=0-99 for sbatch
-            if iend == 20000:
+            ### --array=0-100 for sbatch (istart = 20000)
+            if iend == 20200:
                 iend = 20130
         elif quad=='A4':
-            ### 36892 pixels
-            ### --array=0-183 for sbatch
-            if iend == 36800:
-                iend = 36892
-        elif quad=='A1_add':
-            ### 3614 pixels
-            ### --array=0-17 for sbatch
-            if iend == 3600:
-                iend = 3614
-        elif quad=='A4_add':
-            ### 2008 pixels
-            ### --array=0-9 for sbatch
-            if iend == 2000:
-                iend = 2008
-        elif quad=='A1_add_2':
-            ### 554 pixels
-            ### --array=0-2
-            if iend == 600:
-                iend = 554
-            
+            ### 38900 pixels
+            ### --array=0-194 for sbatch (istart = 38800)
+            if iend == 39000:
+                iend = 38900
+                
     iarray = np.arange(istart,iend)
 
     if custom_run:
