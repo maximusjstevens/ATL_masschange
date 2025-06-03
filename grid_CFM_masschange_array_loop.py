@@ -6,6 +6,10 @@ grid_CFM_masschange_array_loop.py
 This script takes CFM outputs and puts them
 on the ICESat-2 grid.
 
+Run using CFM_grid_azure.j:
+>>> sbatch --array=0-179 CFM_grid_azure.j
+(first set the quadrant in the .j script)
+
 To utilize parallel writing, which allows many CFM results
 files to be put into the gridded file simultaneously, we use
 a zarr store. This script puts each pixel's results into that
