@@ -41,7 +41,7 @@ hh = socket.gethostname()
 global runloc
 if 'disc' in hh:
     runloc = 'discover'
-elif 'gs615-meltwater' in hh:
+elif (('gs615-meltwater' in hh) or ('ndc' in hh)):
     runloc = 'local'
 else:
     runloc = 'azure'
@@ -208,7 +208,7 @@ if __name__ == '__main__':
         pixel_path = Path('/Users/cdsteve2/research/ATL_masschange/pixels_to_run')
         # ll_list = np.genfromtxt(Path(CFM_path,f'IS2_icepixels_{icesheet}.csv'),delimiter=',',skip_header=1)
         if icesheet=='AIS':
-            ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}_add.csv'),delimiter=',',skip_header=1)
+            ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}_full.csv'),delimiter=',',skip_header=1)
         elif icesheet=='GrIS':
             ll_list =  np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}.csv'),delimiter=',',skip_header=1)
     
@@ -391,7 +391,10 @@ if __name__ == '__main__':
 
     # configName = f'CFMconfig_{y_w}_{x_w}.json'
     configName = f'CFMconfig_{icesheet}_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}.json'
-    configPath_in = Path(CFM_path,'json',configName)
+    if runloc != 'local':
+        configPath_in = Path(CFM_path,'json',configName)
+    else:
+        configPath_in = Path('/Users/cdsteve2/research/ATL_masschange/json',configName)
     shutil.copyfile(config_in, configPath_in)
     
     if os.path.isfile(os.path.join(c['resultsFolder'],configName)):
