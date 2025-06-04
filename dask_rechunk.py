@@ -25,14 +25,14 @@ def zchunk(dataset):
         timechunk=2557
 
     target_chunks = {
-            "FAC": {"time": 2557, "x": 21, "y": 233},
-            "RAIN": {"time": 2557, "x": 21, "y": 233},
-            "RUNOFF": {"time": 2557, "x": 21, "y": 233},
-            "SMB": {"time": 2557, "x": 21, "y": 233},
-            "SMB_a": {"time": 2557, "x": 21, "y": 233},
-            "SMELT": {"time": 2557, "x": 21, "y": 233},
-            "SNOWFALL": {"time": 2557, "x": 21, "y": 233},
-            "TS": {"time": 2557, "x": 21, "y": 233},
+            "FAC": {"time": timechunk, "x": 21, "y": 233},
+            "RAIN": {"time": timechunk, "x": 21, "y": 233},
+            "RUNOFF": {"time": timechunk, "x": 21, "y": 233},
+            "SMB": {"time": timechunk, "x": 21, "y": 233},
+            "SMB_a": {"time": timechunk, "x": 21, "y": 233},
+            "SMELT": {"time": timechunk, "x": 21, "y": 233},
+            "SNOWFALL": {"time": timechunk, "x": 21, "y": 233},
+            "TS": {"time": timechunk, "x": 21, "y": 233},
             "SMB_RCI": {"x": 21, "y": 233},
             "time": None,  # don't rechunk this array
             "reference_time": None,  # don't rechunk this array
@@ -41,7 +41,7 @@ def zchunk(dataset):
         }
     max_mem = "60MB"
        
-    ff = f'firnadls/CFM_gridded/CFM_gridded_AIS_{dataset}.zarr/'
+    ff = f'~/firnadls/CFM_gridded/CFM_gridded_AIS_{dataset}.zarr/'
     sg = zarr.open_consolidated(ff)
     target_store = f"firnadls/CFM_gridded/CFM_gridded_AIS_{dataset}_rechunked_c.zarr"
     temp_store = f"firnadls/CFM_gridded/CFM_gridded_AIS_{dataset}_tmp_c.zarr"
