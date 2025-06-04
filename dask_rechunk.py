@@ -72,7 +72,7 @@ def zchunk(dataset, icesheet):
             "x": None,
             "y": None,
         }
-    max_mem = "60MB"
+    max_mem = "100MB"
        
     ff = Path(f'/shared/home/cdsteve2/firnadls/CFM_gridded/CFM_gridded_{icesheet}_{dataset}.zarr/')
     sg = zarr.open_consolidated(ff)
