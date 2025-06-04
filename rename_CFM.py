@@ -16,8 +16,9 @@ import json
 import os
 import traceback
 import shutil
+import sys
 
-def rename_pix_CFM():
+def rename_pix_CFM(quad):
     '''
     this function was built specifically to deal with my azure runs, when the 
     directory names referred to a pixel number from a list of pixels to run.
@@ -25,8 +26,8 @@ def rename_pix_CFM():
     zero. This will assign pixel numbers from a different "pixel to run" csv list.
     '''
 
-    to_change_name = 'AIS_A4'
-    quad = to_change_name.split('_')[1]
+    to_change_name = f'AIS_{quad}'
+    # quad = to_change_name.split('_')[1]
     
     ### lists of pixels. Change as needed
     px_dest = pd.read_csv(f'/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_AIS_{quad}_full.csv') # new numbers (we will remap to these) 
@@ -88,9 +89,9 @@ def rename_pix_CFM():
             print(rw)
             traceback.print_exc()
 
-def pixel_to_xy():
-    to_change_name = 'AIS_A1'
-    quad = to_change_name.split('_')[1]
+def pixel_to_xy(quad):
+    to_change_name = f'AIS_{quad}'
+    # quad = to_change_name.split('_')[1]
 
     p_tochange = Path(f'/shared/home/cdsteve2/firnadls/CFM_outputs/{to_change_name}') # Path to directories whose names will be changed
     err_dir = Path(p_tochange,'errors')
@@ -141,7 +142,8 @@ def pixel_to_xy():
 
 
 if __name__=='__main__':
-    # rename_pix_CFM()
-    pixel_to_xy()
+    quad = sys.argv[1]
+    # rename_pix_CFM(quad)
+    pixel_to_xy(quad)
     
     
