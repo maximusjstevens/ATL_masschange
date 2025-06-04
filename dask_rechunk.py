@@ -83,6 +83,8 @@ def zchunk(dataset, icesheet):
     with ProgressBar():
         array_plan.execute()
 
+    zarr.consolidate_metadata(target_store)
+
 if __name__=='__main__':
     icesheet='AIS'
     dataset = '5d'
