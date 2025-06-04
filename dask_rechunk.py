@@ -50,10 +50,10 @@ def zchunk(dataset, icesheet):
     elif dataset=='1d':
         timechunk=2557
 
-    if dataset=='AIS':
+    if icesheet=='AIS':
         xchunk = 21
         ychunk = 233
-    elif dataset=='GrIS':
+    elif icesheet=='GrIS':
         xchunk = 100 # need to figure these out
         ychunk = 100
 
