@@ -116,7 +116,7 @@ def MERRA2_zarr_to_dataframe(y_int,x_int,icesheet,zarr_source=runloc):
                 zarr_path = Path("/discover/nobackup/projects/icesat2/firn/ATL_masschange/CFM_forcing/AIS/zarr")    
         elif zarr_source=='azure':
             if icesheet=='GrIS':
-                zarr_path = Path("/shared/firndata/")
+                zarr_path = Path("/shared/home/cdsteve2/firnadls/CFM_inputs/GrIS/")
             elif icesheet=='AIS':
                 zarr_path = Path("/shared/home/cdsteve2/firnadls/CFM_inputs/AIS/")
             
@@ -185,7 +185,7 @@ if __name__ == '__main__':
         c          = json.loads(jsonString) 
 
     c['runloc'] = runloc
-    quad = 'A4'
+    quad = 'A1'
     c['quad'] = quad 
 
     if c['runloc'] == 'azure':
@@ -236,8 +236,8 @@ if __name__ == '__main__':
     rhos = 350
     c['rhos0'] = rhos
     
-    rf_po = f'CFMresults_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}_{rhos}' #results directory name
-    # rf_po = f'CFMresults_{quad}_{dkey}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}_{rhos}' #results directory name
+    # rf_po = f'CFMresults_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}_{rhos}' #results directory name
+    rf_po = f'CFMresults_{quad}_{dkey}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}' #results directory name
     
     if runloc == 'azure':
         
@@ -365,6 +365,12 @@ if __name__ == '__main__':
     if bdot_mean>=0.15:
         print('one')
         pass
+    elif bdot_mean<0.01:
+        print('onepointfive')
+        c["grid1bottom"] = min(0.2,depth_S1)
+        c["grid2bottom"] = min(2,depth_S2)
+        c['nodestocombine'] = 360 
+        c['multnodestocombine'] = 12
     elif ((bdot_mean>0.06) & (bdot_mean<0.15)):
         print('two')
         c["grid1bottom"] = min(3,depth_S1)

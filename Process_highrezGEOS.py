@@ -10,6 +10,11 @@
 Script to take the tiled, high-resolution outputs
 from GEOS-LDAS and interpolate them onto the ICESat-2
 grid.
+
+- One netCDF for each year
+- model outputs are projected onto the ICESat-2 ATL15 10km grid
+
+
 '''
 
 import numpy as np
@@ -96,12 +101,20 @@ def grid_to_IS2(icesheet,YYYY,_ecode=None):
     y_g = atl15_10k.y.values
 
     transformer = pyproj.Transformer.from_crs("EPSG:4326", _ecode)
+    
+    if YYYY<=1990:
+        pHR = Path('/discover/nobackup/projects/gmao/polarm/lcandre2/outputs_long/LLI_M2_02_C1440_1980_1990/output/C1440x6C_GLOBAL/cat/ens0000')
+    else:
+        pHR = Path('/discover/nobackup/projects/gmao/polarm/lcandre2/outputs_long/LLI_M2_04_C1440_1991_2025/output/C1440x6C_GLOBAL/cat/ens0000')
 
-    pHR = Path('/discover/nobackup/projects/gmao/polarm/lcandre2/outputs_long/LLI_M2_02_C1440_1980_1990/output/C1440x6C_GLOBAL/cat/ens0000')
-    # for YYYY in np.arange(1981,1990):
     print(YYYY)
     out_path = Path('/discover/nobackup/cdsteve2/climate/LDAS_highres/LDAS_outputs')
     fn_out_yearly = f'LDAS_IS2_10km_daily_{YYYY}.nc'
+
+    if os.path.exists(Path(out_path,fn_out_yearly)):
+        print(f'file {fn_out_yearly} exists. Exiting.')
+        sys.exit()
+    
     ds_monthly = []
     for MM in np.arange(1,13):
         print(MM, flush=True)
@@ -109,13 +122,21 @@ def grid_to_IS2(icesheet,YYYY,_ecode=None):
         _YM = f'{YYYY}-{MM}'
         _date_range = pd.date_range(_YM,pd.to_datetime(_YM) + pd.offsets.MonthEnd(n=0))
 
-        fn_glc = f'LLI_M2_02_C1440_1980_1990.tavg24_1d_glc_Nt.{YYYY}{MM:02d}*_1200z.nc4'
+        if YYYY>1990:
+            fn_glc = f'LLI_M2_04_C1440_1991_2025.tavg24_1d_glc_Nt.{YYYY}{MM:02d}*_1200z.nc4'
+        else:
+            fn_glc = f'LLI_M2_02_C1440_1980_1990.tavg24_1d_glc_Nt.{YYYY}{MM:02d}*_1200z.nc4'
         pF_glc = Path(pHR,f'Y{YYYY}/M{MM:02d}')
         flist_glc = sorted([_x for _x in pF_glc.glob(fn_glc)])
+        # print(flist_glc)
 
-        fn_lfs = f'LLI_M2_02_C1440_1980_1990.tavg24_1d_lfs_Nt.{YYYY}{MM:02d}*_1200z.nc4'
+        if YYYY>1990:
+            fn_lfs = f'LLI_M2_04_C1440_1991_2025.tavg24_1d_lfs_Nt.{YYYY}{MM:02d}*_1200z.nc4'
+        else:
+            fn_lfs = f'LLI_M2_02_C1440_1980_1990.tavg24_1d_lfs_Nt.{YYYY}{MM:02d}*_1200z.nc4'
         pF_lfs = Path(pHR,f'Y{YYYY}/M{MM:02d}')
         flist_lfs = sorted([_x for _x in pF_lfs.glob(fn_lfs)])
+        # print(flist_lfs)
 
         ds_temp = atl15_10k.isel(time=0).copy()
         ###########################
@@ -174,17 +195,16 @@ def grid_to_IS2(icesheet,YYYY,_ecode=None):
         ds_monthly.append(ds_combined)
         iter_time = (time.time() - start_time)/60
         print(f'iteration time: {iter_time}')
+        ### end month loop  
     ds_year = xr.concat(ds_monthly, dim='time').sortby('time')
     ds_year.to_netcdf(Path(out_path,fn_out_yearly))
 
-    ### end month loop  
-
 if __name__=='__main__':
+    
     icesheet='GrIS'
-    year_list = np.arange(1981,1990)
+    year_list = np.arange(1990,2020)
     i_yr = int(sys.argv[1])
     YYYY = year_list[i_yr]
-    
     grid_to_IS2(icesheet,YYYY)
 
 

@@ -12,10 +12,13 @@ def checkdone(icesheet, quad=None):
         _range = 20013
     else:
         if quad == 'A1':
-            _range = 32295
+            _range = 35909
             qn = 'A1'
         elif quad == 'A1_add':
             _range = 3614
+            qn = 'A1'
+        elif quad == 'A1_add_2':
+            _range = 554
             qn = 'A1'
         elif quad == 'A2':
             _range = 27283
@@ -24,7 +27,7 @@ def checkdone(icesheet, quad=None):
             _range = 20130
             qn = 'A3'
         elif quad == 'A4':
-            _range = 36892
+            _range = 38900
             qn = 'A4'
         elif quad == 'A4_add':
             _range = 2008
@@ -58,13 +61,13 @@ def checkdone(icesheet, quad=None):
             m_res_list.append(ii)
     
     if quad is not None:
-        np.savetxt(f'missing_dirs_{quad}_0508.txt', m_dir_list, fmt='%i')
-        np.savetxt(f'missing_spin_{quad}_0508.txt', m_spin_list, fmt='%i')
-        np.savetxt(f'missing_res_{quad}_0508.txt', m_res_list, fmt='%i')   
+        np.savetxt(f'missing_dirs_{quad}_0604.txt', m_dir_list, fmt='%i')
+        np.savetxt(f'missing_spin_{quad}_0604.txt', m_spin_list, fmt='%i')
+        np.savetxt(f'missing_res_{quad}_0604.txt', m_res_list, fmt='%i')   
     else:
-        np.savetxt('missing_dirs_GrIS_0508.txt', m_dir_list, fmt='%i')
-        np.savetxt('missing_spin_GrIS_0508.txt', m_spin_list, fmt='%i')
-        np.savetxt('missing_res_GrIS_0508.txt', m_res_list, fmt='%i')
+        np.savetxt('missing_dirs_GrIS_0604.txt', m_dir_list, fmt='%i')
+        np.savetxt('missing_spin_GrIS_0604.txt', m_spin_list, fmt='%i')
+        np.savetxt('missing_res_GrIS_0604.txt', m_res_list, fmt='%i')
 
 if __name__=='__main__':
     icesheet='AIS'
