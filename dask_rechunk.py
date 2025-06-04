@@ -4,6 +4,7 @@ import dask.array as dsa
 from dask.distributed import Client
 from dask.diagnostics import ProgressBar
 import zarr
+from pathlib import Path
 
 
 def zchunk(dataset):
@@ -41,10 +42,10 @@ def zchunk(dataset):
         }
     max_mem = "60MB"
        
-    ff = f'~/firnadls/CFM_gridded/CFM_gridded_AIS_{dataset}.zarr/'
+    ff = Path(f'/shared/home/cdsteve2/firnadls/CFM_gridded/CFM_gridded_AIS_{dataset}.zarr/')
     sg = zarr.open_consolidated(ff)
-    target_store = f"firnadls/CFM_gridded/CFM_gridded_AIS_{dataset}_rechunked_c.zarr"
-    temp_store = f"firnadls/CFM_gridded/CFM_gridded_AIS_{dataset}_tmp_c.zarr"
+    target_store = f"firnadls/CFM_gridded/CFM_gridded_AIS_{dataset}_rechunked.zarr"
+    temp_store = f"firnadls/CFM_gridded/CFM_gridded_AIS_{dataset}_tmp.zarr"
 
     array_plan = rechunk(sg, target_chunks, max_mem, target_store, temp_store=temp_store)
     with ProgressBar():
