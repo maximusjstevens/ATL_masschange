@@ -17,6 +17,7 @@ import os
 import traceback
 import shutil
 import sys
+import glob
 
 def rename_pix_CFM(quad):
     '''
@@ -137,8 +138,40 @@ def pixel_to_xy(quad):
         except Exception:
             print(f'Error with {ii}')
             print(rw)
-            traceback.print_exc() 
+            traceback.print_exc()
 
+def pixel_to_dironly(quad):
+    
+    to_change_name = f'AIS_{quad}'
+    # quad = to_change_name.split('_')[1]
+
+    p_tochange = Path(f'/shared/home/cdsteve2/firnadls/CFM_outputs/{to_change_name}') # Path to directories whose names will be changed
+    renamed_dir = Path(p_tochange,'renamed') 
+
+    px_list = pd.read_csv(f'/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_AIS_{quad}_full.csv')
+
+    dirs_to_change = glob.glob(str(Path(p_tochange,"CFMre*")))
+
+    for dd in dirs_to_change:
+        
+        try:
+            ### change below as needed!
+            old_dir = dd.split('/')[-1]
+            px = int(old_dir.split('_')[2])
+
+            rw = px_list.loc[px]
+        
+            xM = rw['x']
+            yM = rw['y']
+
+            new_dir = f'CFMresults_AIS_{int(xM)}_{int(yM)}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
+            
+            shutil.move(Path(p_tochange,old_dir),Path(p_tochange,new_dir))
+        
+        except Exception:
+            print(f'Error')
+            print(rw)
+            traceback.print_exc()
 
 
 if __name__=='__main__':

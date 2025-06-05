@@ -236,8 +236,9 @@ if __name__ == '__main__':
     rhos = 350
     c['rhos0'] = rhos
     
-    # rf_po = f'CFMresults_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}_{rhos}' #results directory name
-    rf_po = f'CFMresults_{quad}_{dkey}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}' #results directory name
+    rf_po = f'CFMresults_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}' #results directory name
+    ### Formerly, I was using pixel number (dkey) rather than x/y for naming.
+    # rf_po = f'CFMresults_{quad}_{dkey}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}' #results directory name
     
     if runloc == 'azure':
         
@@ -278,7 +279,7 @@ if __name__ == '__main__':
         jj=-9999
         x_val=x_int
         y_val=y_int
-        df_daily = pd.read_csv(Path('/Users/cdsteve2/research/ATL_masschange/CFMforcing',f'CFMforcing_df_{dkey}.csv'),index_col=0,parse_dates=True)
+        df_daily = pd.read_csv(Path('/Users/cdsteve2/research/ATL_masschange/CFMforcing',f'CFMforcing_df_{int(x_int)}_{int(y_int)}.csv'),index_col=0,parse_dates=True)
         write_df = False # This stays false
 
     if write_df:
@@ -395,7 +396,6 @@ if __name__ == '__main__':
     
     c["NewSpin"] = False
 
-    # configName = f'CFMconfig_{y_w}_{x_w}.json'
     configName = f'CFMconfig_{icesheet}_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}.json'
     if runloc != 'local':
         configPath_in = Path(CFM_path,'json',configName)
