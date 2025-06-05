@@ -163,6 +163,7 @@ if __name__ == '__main__':
     #     runloc = 'azure'
 
     icesheet = 'AIS'
+    quad = 'A1'
         
     seb = True
     LWdown_source = 'EMIS_eff' #EMIS_eff, MERRA2
@@ -185,7 +186,6 @@ if __name__ == '__main__':
         c          = json.loads(jsonString) 
 
     c['runloc'] = runloc
-    quad = 'A1'
     c['quad'] = quad 
 
     if c['runloc'] == 'azure':
@@ -236,7 +236,7 @@ if __name__ == '__main__':
     rhos = 350
     c['rhos0'] = rhos
     
-    rf_po = f'CFMresults_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}' #results directory name
+    rf_po = f'CFMresults_{icesheet}_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}' #results directory name
     ### Formerly, I was using pixel number (dkey) rather than x/y for naming.
     # rf_po = f'CFMresults_{quad}_{dkey}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}' #results directory name
     
@@ -308,7 +308,8 @@ if __name__ == '__main__':
         
     df_daily = df_daily.drop('EMIS_eff',axis=1)
 
-    print(ii, jj, y_val, x_val)
+    print(ii, jj)
+    print(f"y: {y_val}, x: {x_val}")
     print(df_daily.head())
     df_spy = 365.25*24*3600 / (df_daily.index.to_series().diff()).dt.total_seconds().mean()
     print(f'stepsperyear (az): {df_spy}')
