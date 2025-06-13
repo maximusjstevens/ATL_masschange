@@ -162,7 +162,7 @@ if __name__ == '__main__':
     # else:
     #     runloc = 'azure'
 
-    icesheet = 'AIS'
+    icesheet = 'GrIS'
     quad = 'A1'
         
     seb = True
