@@ -163,7 +163,7 @@ if __name__ == '__main__':
     #     runloc = 'azure'
 
     icesheet = 'AIS'
-    quad = 'A1'
+    quad = 'A3'
         
     seb = True
     LWdown_source = 'EMIS_eff' #EMIS_eff, MERRA2
