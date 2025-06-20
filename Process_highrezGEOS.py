@@ -109,7 +109,7 @@ def grid_to_IS2(icesheet,YYYY,_ecode=None):
 
     print(YYYY)
     out_path = Path('/discover/nobackup/cdsteve2/climate/LDAS_highres/LDAS_outputs')
-    fn_out_yearly = f'LDAS_IS2_10km_daily_{YYYY}.nc'
+    fn_out_yearly = f'LDAS_{icesheet}_IS2_10km_daily_{YYYY}.nc'
 
     if os.path.exists(Path(out_path,fn_out_yearly)):
         print(f'file {fn_out_yearly} exists. Exiting.')
@@ -202,7 +202,7 @@ def grid_to_IS2(icesheet,YYYY,_ecode=None):
 if __name__=='__main__':
     
     icesheet='GrIS'
-    year_list = np.arange(1990,2020)
+    year_list = np.arange(2020,2025)
     i_yr = int(sys.argv[1])
     YYYY = year_list[i_yr]
     grid_to_IS2(icesheet,YYYY)
