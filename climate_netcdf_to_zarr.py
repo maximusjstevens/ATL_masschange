@@ -8,6 +8,9 @@ christopher.d.stevens-1@nasa.gov
 This script takes yearly climate data files 
 and combines them into a zarr.
 
+For Greenland, this took a bit over 1.5 hours per decade, so
+SBATCH time should be ~2 hours.
+
 Specifically, this script is designed to work with the MERRA-2
 (possibly other) yearly files that have been regridded onto the 
 ATL15 10km grid.
@@ -21,10 +24,9 @@ climate netCDFs come from:
 and go to:
 /discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}/zarr
 
-Then, each zarr needs to be zipped. (old?)
-
 This script now uses a zarr.Storage.zipstore for the to_zarr write, 
-thereby removing the need to create a zarr and zip (as discussed here:
+thereby removing the need to create a zarr and zip, as I did in prior
+iterations of this script. (Details on that process discussed here:
 https://github.com/zarr-developers/zarr-python/issues/756)
 
 Zarr 3.0 seems to have broken this zip store capability (2/6/25)
