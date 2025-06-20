@@ -121,7 +121,7 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
         else: # GrIS
             rdir = Path(f'/mnt/firnadls/CFM_outputs/{icesheet}')
         
-        rmid = f'CFMresults_{icesheet}_{xM}_{yM}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
+        rmid = f'CFMresults_{icesheet}_{int(xM)}_{int(yM)}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
 
         gridded_zarr_path_1d = Path(f'/shared/home/cdsteve2/{azure_drive}/CFM_gridded/{zarr_name}_1d{z_ext}') # path of the zarr store  
         gridded_zarr_path_5d = Path(f'/shared/home/cdsteve2/{azure_drive}/CFM_gridded/{zarr_name}_5d{z_ext}') # path of the zarr store
