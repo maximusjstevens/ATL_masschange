@@ -118,7 +118,7 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
         gridded_zarr_path_5d = Path(f'/shared/home/cdsteve2/{azure_drive}/CFM_gridded/{zarr_name}_5d{z_ext}') # path of the zarr store
 
         if icesheet=='GrIS':
-            pt_path = Path('/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_icepixels_GrIS.csv')
+            pt_path = Path('/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_GrIS.csv')
         elif icesheet=='AIS':
             pt_path = Path(f'/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_AIS_{quad}_full.csv')
     
@@ -305,7 +305,8 @@ if __name__ == '__main__':
     tic=time.time()
     ii = int(sys.argv[1])
     print('ii',ii)
-    icesheet='AIS'
+
+    icesheet='GrIS'
     
     if icesheet=='GrIS':
         quad=None
@@ -325,10 +326,10 @@ if __name__ == '__main__':
     iend = istart + 200 # +200 because arange below is non-inclusive, so array is e.g. 0-199, 200-399, etc.
     
     if icesheet=='GrIS':
-        ### 20013 pixels
+        ### 20037 pixels
         ### --array==0-99 for sbatch
         if iend == 20000:
-            iend = 20013
+            iend = 20037
     elif icesheet=='AIS':
         if quad=='A1':
             ### 35909 pixels
