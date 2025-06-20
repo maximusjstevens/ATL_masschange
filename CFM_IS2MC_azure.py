@@ -41,7 +41,7 @@ hh = socket.gethostname()
 global runloc
 if 'disc' in hh:
     runloc = 'discover'
-elif 'gs615-meltwater' in hh:
+elif (('gs615-meltwater' in hh) or ('ndc' in hh)):
     runloc = 'local'
 else:
     runloc = 'azure'
@@ -162,7 +162,8 @@ if __name__ == '__main__':
     # else:
     #     runloc = 'azure'
 
-    icesheet = 'AIS'
+    icesheet = 'GrIS'
+    quad = 'A1'
         
     seb = True
     LWdown_source = 'EMIS_eff' #EMIS_eff, MERRA2
@@ -185,7 +186,6 @@ if __name__ == '__main__':
         c          = json.loads(jsonString) 
 
     c['runloc'] = runloc
-    quad = 'A1'
     c['quad'] = quad 
 
     if c['runloc'] == 'azure':
@@ -208,7 +208,7 @@ if __name__ == '__main__':
         pixel_path = Path('/Users/cdsteve2/research/ATL_masschange/pixels_to_run')
         # ll_list = np.genfromtxt(Path(CFM_path,f'IS2_icepixels_{icesheet}.csv'),delimiter=',',skip_header=1)
         if icesheet=='AIS':
-            ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}_add.csv'),delimiter=',',skip_header=1)
+            ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}_full.csv'),delimiter=',',skip_header=1)
         elif icesheet=='GrIS':
             ll_list =  np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}.csv'),delimiter=',',skip_header=1)
     
@@ -236,8 +236,9 @@ if __name__ == '__main__':
     rhos = 350
     c['rhos0'] = rhos
     
-    # rf_po = f'CFMresults_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}_{rhos}' #results directory name
-    rf_po = f'CFMresults_{quad}_{dkey}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}' #results directory name
+    rf_po = f'CFMresults_{icesheet}_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}' #results directory name
+    ### Formerly, I was using pixel number (dkey) rather than x/y for naming.
+    # rf_po = f'CFMresults_{quad}_{dkey}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}' #results directory name
     
     if runloc == 'azure':
         
@@ -278,7 +279,7 @@ if __name__ == '__main__':
         jj=-9999
         x_val=x_int
         y_val=y_int
-        df_daily = pd.read_csv(Path('/Users/cdsteve2/research/ATL_masschange/CFMforcing',f'CFMforcing_df_{dkey}.csv'),index_col=0,parse_dates=True)
+        df_daily = pd.read_csv(Path('/Users/cdsteve2/research/ATL_masschange/CFMforcing',f'CFMforcing_df_{int(x_int)}_{int(y_int)}.csv'),index_col=0,parse_dates=True)
         write_df = False # This stays false
 
     if write_df:
@@ -307,7 +308,8 @@ if __name__ == '__main__':
         
     df_daily = df_daily.drop('EMIS_eff',axis=1)
 
-    print(ii, jj, y_val, x_val)
+    print(ii, jj)
+    print(f"y: {y_val}, x: {x_val}")
     print(df_daily.head())
     df_spy = 365.25*24*3600 / (df_daily.index.to_series().diff()).dt.total_seconds().mean()
     print(f'stepsperyear (az): {df_spy}')
@@ -395,10 +397,11 @@ if __name__ == '__main__':
     
     c["NewSpin"] = False
 
-    # configName = f'CFMconfig_{y_w}_{x_w}.json'
-    # configName = f'CFMconfig_{icesheet}_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}.json'
-    configName = f'CFMconfig_{icesheet}_{dkey}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}.json'
-    configPath_in = Path(CFM_path,'json',configName)
+    configName = f'CFMconfig_{icesheet}_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}.json'
+    if runloc != 'local':
+        configPath_in = Path(CFM_path,'json',configName)
+    else:
+        configPath_in = Path('/Users/cdsteve2/research/ATL_masschange/json',configName)
     shutil.copyfile(config_in, configPath_in)
     
     if os.path.isfile(os.path.join(c['resultsFolder'],configName)):
