@@ -100,7 +100,8 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
 
     if runloc=='azure':
         if icesheet=='GrIS':
-            pt_path = Path('/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_GrIS.csv')
+            pt_path = Path('/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_GrIS_periphery.csv')
+            # pt_path = Path('/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_GrIS.csv')            
         elif icesheet=='AIS':
             pt_path = Path(f'/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_AIS_{quad}_full.csv')    
     elif runloc=='local':
@@ -322,11 +323,17 @@ if __name__ == '__main__':
     istart = ii*200
     iend = istart + 200 # +200 because arange below is non-inclusive, so array is e.g. 0-199, 200-399, etc.
     
+    # if icesheet=='GrIS': #OG
+    #     ### 20037 pixels
+    #     ### --array==0-99 for sbatch
+    #     if iend == 20000:
+    #         iend = 20037
+    
     if icesheet=='GrIS':
-        ### 20037 pixels
-        ### --array==0-99 for sbatch
-        if iend == 20000:
-            iend = 20037
+        ### periphery is 6662 pixels
+        ### --array==0-32 for sbatch
+        if iend == 6600:
+            iend = 6662
     elif icesheet=='AIS':
         if quad=='A1':
             ### 35909 pixels
