@@ -88,6 +88,6 @@ def zchunk(dataset, icesheet):
     zarr.consolidate_metadata(target_store)
 
 if __name__=='__main__':
-    icesheet='AIS'
+    icesheet='GrIS'
     dataset = '5d'
     zchunk(dataset,icesheet)
