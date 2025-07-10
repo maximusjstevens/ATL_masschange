@@ -113,9 +113,13 @@ def grid_CFM(zarr_name, icesheet, azure_drive='firnadls'):
         print(f_CFMresults)
     elif runloc=='azure':
         if icesheet == 'GrIS':
-            f_CFMresults = '/mnt/firnadls/CFM_outputs/GrIS/CFMresults_-65000_-1315000_GSFC2020_LW-EMIS_eff_ALB-M2_interp/CFMresults.hdf5'
+            f_glob = glob.glob('/mnt/firnadls/CFM_outputs/GrIS/*/CFMresults.hdf5')
+            f_CFMresults = f_glob[1]
+            # f_CFMresults = '/mnt/firnadls/CFM_outputs/GrIS/CFMresults_-65000_-1315000_GSFC2020_LW-EMIS_eff_ALB-M2_interp/CFMresults.hdf5'
         elif icesheet == 'AIS':
-            f_CFMresults = '/mnt/firnadls/CFM_outputs/AIS_A1/CFMresults_A1_2936_GSFC2020_LW-EMIS_eff_ALB-M2_interp/CFMresults.hdf5'
+            f_glob = glob.glob('/mnt/firnadls/CFM_outputs/AIS_A1/*/CFMresults.hdf5')
+            f_CFMresults = fglob[1]
+            # f_CFMresults = '/mnt/firnadls/CFM_outputs/AIS_A1/CFMresults_A1_2936_GSFC2020_LW-EMIS_eff_ALB-M2_interp/CFMresults.hdf5'
     elif runloc == 'discover':
         if icesheet == 'GrIS':
             f_CFMresults = '/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/CFMresults_-65000_-1315000_GSFC2020_LW-EMIS_eff_ALB-M2_interp/CFMresults.hdf5'

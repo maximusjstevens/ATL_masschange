@@ -3,7 +3,7 @@
 #SBATCH --nodes=1
 #SBATCH -o logs/container_out_%04A_%04a
 #SBATCH -e logs/container_err_%04A_%04a
-#SBATCH --time=0:50:00
+#SBATCH --time=0:30:00
 #SBATCH --account=s2656
 
 

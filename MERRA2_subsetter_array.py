@@ -538,8 +538,9 @@ class MERRA_concat:
     
             ### Below code calculates surface melt and Tsurf using radiation fluxes ###
             ### assumes a surface layer of 0.08 m with density=400 kg/m3
+            ### uses hourly radiation fluxes from MERRA2 (i.e., not resampled)
             if calc_melt:
-                SBC = 5.67e-8
+                SBC = 5.67e-8 # W/m2/K4
                 CP_I = 2097.0 
                 m = 400*0.08
                 dt = 3600

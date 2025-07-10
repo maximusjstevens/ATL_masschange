@@ -116,7 +116,7 @@ class cdo_bil:
                             af[dv].loc[dict(time=tt)] = xr.where(ds_X.notnull(),ds_X,af['_tc']).values
                             af = af.drop_vars(["_tc"])
                                     
-            af.to_netcdf(infile) # this is just a temporary file with the MERRA-2 gridding but the non-ice pixels crop and the convolution applied; this is used for the remapping.
+            af.to_netcdf(infile) # this is just a temporary file with the MERRA-2 gridding but will have the non-ice pixels cropped and the convolution applied (if those options selected); this is used for the remapping.
            
         if convolve:
             outfile = f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}/netCDF/4h/M2_{icesheet}_{YY}_ATL15-10k_bil_conv.nc'
@@ -126,7 +126,10 @@ class cdo_bil:
             else:
                 outfile = f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}/netCDF/4h/M2_{icesheet}_{YY}_ATL15-10k_bil_NOCROP.nc'
         
-        sub.call(["cdo",f"remapbil,/discover/nobackup/cdsteve2/IS2_data/gridfiles/ATL15_10km_{icesheet}_gridfile.txt",infile,outfile])
+        if os.path.exists(outfile):
+            print(f'{outfile} exists; will not remake')
+        else:
+            sub.call(["cdo",f"remapbil,/discover/nobackup/cdsteve2/IS2_data/gridfiles/ATL15_10km_{icesheet}_gridfile.txt",infile,outfile])
 
         os.remove(infile)
 

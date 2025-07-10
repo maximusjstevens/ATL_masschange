@@ -74,7 +74,9 @@ class make_zarr:
         dlist = [d_in]
         for decade in dlist:
             print(decade)
-            zarr_name = Path(f'M2_{icesheet}_{freq_name}_IS2mc_{decade}0.zarr')
+            # zarr_name = Path(f'M2_{icesheet}_{freq_name}_IS2mc_{decade}0.zarr')
+            zarr_name = Path(f'M2_{icesheet}_{freq_name}_IS2mc_{decade}0_NOCONVOLUTION_NOCROP.zarr')
+            # zarr_name = Path(f'LDAS_hr_{icesheet}_{freq_name}_IS2mc_{decade}0.zarr')
             zarr_dir  = Path(out_path,'zarr')
             zarr_dir.mkdir(parents=True,exist_ok=True)
 
@@ -91,8 +93,11 @@ class make_zarr:
                 continue
 
             netcdf_path = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}') # Path to yearly netcdfs that will go into zarr.
+            # netcdf_path = Path(f'/discover/nobackup/cdsteve2/climate/LDAS_highres/LDAS_outputs/{icesheet}') # Path to yearly netcdfs that will go into zarr.
 
-            allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,'netCDF/4h',f'*{icesheet}*{decade}*conv.nc'))))
+            # allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,'netCDF/4h',f'*{icesheet}*{decade}*conv.nc'))))
+            allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,'netCDF/4h',f'*{icesheet}*{decade}*NOCROP.nc'))))
+            # allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,'netCDF/Daily',f'LDAS_{icesheet}*{decade}*.nc'))))
             ### allYearlyFiles is a list of the netCDFs for a certain decade.
 
             with xr.open_mfdataset(allYearlyFiles,chunks=-1,parallel=True) as dsALL:            
@@ -121,6 +126,7 @@ if __name__ == '__main__':
     
     icesheet='GrIS'
     freq='4h'
+    # freq='1d'
 
     try:
         dkey = int(sys.argv[1]) # this is the array value
@@ -143,6 +149,7 @@ if __name__ == '__main__':
 
     # out_path = Path(f'/discover/nobackup/projects/icesat2/firn/ATL_masschange/CFM_forcing/{icesheet}/')
     out_path = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}')
+    # out_path = Path(f'/discover/nobackup/cdsteve2/climate/LDAS_highres/LDAS_outputs/{icesheet}')
     
     dlist_in = ['198','199','200','201','202']
     d_in = dlist_in[dkey]
