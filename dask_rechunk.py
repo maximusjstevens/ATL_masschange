@@ -51,11 +51,13 @@ def zchunk(dataset, icesheet):
         timechunk=2557
 
     if icesheet=='AIS':
-        xchunk = 21
+        # AIS dimensions are x:546, y:446
+        xchunk = 21 #this chunk size, ie. how many pixels will be in the chunk
         ychunk = 233
     elif icesheet=='GrIS':
-        xchunk = 100 # need to figure these out
-        ychunk = 100
+        # GrIS dimensions are x:154, y:274
+        xchunk = 22
+        ychunk = 137
 
     target_chunks = {
             "FAC": {"time": timechunk, "x": xchunk, "y": ychunk},
@@ -86,6 +88,6 @@ def zchunk(dataset, icesheet):
     zarr.consolidate_metadata(target_store)
 
 if __name__=='__main__':
-    icesheet='AIS'
+    icesheet='GrIS'
     dataset = '5d'
     zchunk(dataset,icesheet)

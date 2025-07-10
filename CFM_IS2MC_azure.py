@@ -120,7 +120,7 @@ def MERRA2_zarr_to_dataframe(y_int,x_int,icesheet,zarr_source=runloc):
             elif icesheet=='AIS':
                 zarr_path = Path("/shared/home/cdsteve2/firnadls/CFM_inputs/AIS/")
             
-        filename = Path(zarr_path,f"M2_{icesheet}_4h_IS2mc_{decade}.zarr.zip")
+        filename = Path(zarr_path,f"M2_{icesheet}_4h_IS2mc_{decade}_NOCONVOLUTION_NOCROP.zarr.zip")
 
         # with xr.open_dataset(filename,engine='zarr') as dsZ:
         with xr.open_zarr(filename) as dsZ:
@@ -193,7 +193,7 @@ if __name__ == '__main__':
         if icesheet=='AIS':
             ll_list = np.genfromtxt(Path(CFM_path,f'IS2_pixelstorun_{icesheet}_{quad}_full.csv'),delimiter=',',skip_header=1)
         elif icesheet=='GrIS':
-            ll_list = np.genfromtxt(Path(CFM_path,f'IS2_pixelstorun_GrIS.csv'),delimiter=',',skip_header=1)
+            ll_list = np.genfromtxt(Path(CFM_path,f'IS2_pixelstorun_GrIS_periphery.csv'),delimiter=',',skip_header=1)
     
     elif c['runloc'] == 'discover':
         zarr_source = 'discover'

@@ -80,7 +80,7 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
     '''
     zarr_name: name of the zarr store, without extension 
     icesheet: 'AIS' or 'GrIS'
-    vv: pixel number
+    vv: array value/pixel number
     quad: which quadrant (AIS only)
     zipzarr: whether to write to zipped zarr or directory store
     azure_drive: 'firnadls' or 'firndata'. ADLS is cheap storate, firndata is fast.
@@ -96,49 +96,47 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
         runloc = 'azure'
     ########################
 
-    if zipzarr:
-        z_ext='.zarr.zip'
-    else:
-        z_ext='.zarr'
-        
+    z_ext='.zarr'
+
     if runloc=='azure':
-        if icesheet=='AIS':
-            rdir = Path(f'/mnt/firnadls/CFM_outputs/{icesheet}_{quad}')
-            if 'add' in quad: #A1_add, A4_add, A1_add_2
-                qq = quad.split('_')[0]
-                rmid = f'CFMresults_{qq}_{vv}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
-            else:
-                rmid = f'CFMresults_{quad}_{vv}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
-        else:
-            rdir = Path(f'/mnt/firnadls/CFM_outputs/{icesheet}')
-            rmid = f'CFMresults_{vv}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
-
-        gridded_zarr_path_1d = Path(f'/shared/home/cdsteve2/{azure_drive}/CFM_gridded/{zarr_name}_1d{z_ext}') # path of the zarr store  
-        gridded_zarr_path_5d = Path(f'/shared/home/cdsteve2/{azure_drive}/CFM_gridded/{zarr_name}_5d{z_ext}') # path of the zarr store
-
         if icesheet=='GrIS':
-            pt_path = Path('/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_icepixels_GrIS.csv')
+            pt_path = Path('/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_GrIS.csv')
         elif icesheet=='AIS':
-            pt_path = Path(f'/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_AIS_{quad}_full.csv')
-    
+            pt_path = Path(f'/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_AIS_{quad}_full.csv')    
     elif runloc=='local':
-        rdir = Path(f'/Users/cdsteve2/research/ATL_masschange/CFM_outputs')
-        gridded_zarr_path = Path(f'/Users/cdsteve2/research/ATL_masschange/CFM_GrIS_gridded/{zarr_name}{z_ext}')
-        ATLpath = Path(f'/Users/cdsteve2/research/ATL_masschange')
         pt_path = Path('/Users/cdsteve2/research/ATL_masschange/IS2_icepixels.csv')
 
-    CFM_results_path = Path(rdir, rmid, 'CFMresults.hdf5')
-    print(f'CFM_results_path is {CFM_results_path}')
-        
     ##################################
-    ### get x/y points, make sure they 
-    ### match those for the run from json
+    ### get x/y points
     print(f'vv: {vv}') # pixel number
     M2pts = np.genfromtxt(pt_path,delimiter=',',skip_header=1)
     rw = M2pts[vv] #row with x/y pair in the points file
     xM = rw[0]
     yM = rw[1]
+            
+    if runloc=='azure':
+        if icesheet=='AIS':
+            rdir = Path(f'/mnt/firnadls/CFM_outputs/{icesheet}_{quad}')
+            # rmid = f'CFMresults_{quad}_{vv}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
+        else: # GrIS
+            rdir = Path(f'/mnt/firnadls/CFM_outputs/{icesheet}')
+        
+        rmid = f'CFMresults_{icesheet}_{int(xM)}_{int(yM)}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
+
+        gridded_zarr_path_1d = Path(f'/shared/home/cdsteve2/{azure_drive}/CFM_gridded/{zarr_name}_1d{z_ext}') # path of the zarr store  
+        gridded_zarr_path_5d = Path(f'/shared/home/cdsteve2/{azure_drive}/CFM_gridded/{zarr_name}_5d{z_ext}') # path of the zarr store
     
+    elif runloc=='local':
+        rdir = Path(f'/Users/cdsteve2/research/ATL_masschange/CFM_outputs')
+        gridded_zarr_path = Path(f'/Users/cdsteve2/research/ATL_masschange/CFM_GrIS_gridded/{zarr_name}{z_ext}')
+        ATLpath = Path(f'/Users/cdsteve2/research/ATL_masschange')
+        
+    CFM_results_path = Path(rdir, rmid, 'CFMresults.hdf5')
+    print(f'CFM_results_path is {CFM_results_path}')
+        
+    ##################################
+    ### make sure x/y points  
+    ### match those for the run from json
     try:
         configName = list(Path(rdir,rmid).glob('*.json'))[0]
         with open(configName, "r") as f:
@@ -304,7 +302,8 @@ if __name__ == '__main__':
     tic=time.time()
     ii = int(sys.argv[1])
     print('ii',ii)
-    icesheet='AIS'
+
+    icesheet='GrIS'
     
     if icesheet=='GrIS':
         quad=None
@@ -324,10 +323,10 @@ if __name__ == '__main__':
     iend = istart + 200 # +200 because arange below is non-inclusive, so array is e.g. 0-199, 200-399, etc.
     
     if icesheet=='GrIS':
-        ### 20013 pixels
+        ### 20037 pixels
         ### --array==0-99 for sbatch
         if iend == 20000:
-            iend = 20013
+            iend = 20037
     elif icesheet=='AIS':
         if quad=='A1':
             ### 35909 pixels
@@ -364,7 +363,7 @@ if __name__ == '__main__':
     result_5d_list = []
     result_1d_list = []
 
-    for jj,vv in enumerate(iarray):
+    for jj,vv in enumerate(iarray): #vv is array value
         try:
             result_1d, result_5d = grid_CFM(zarr_name, icesheet, vv, quad) # call function to open CFM results file, process results, write to zarr
             if not result_1d:
