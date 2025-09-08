@@ -138,7 +138,7 @@ if __name__ == '__main__':
     print(f'start_time: {start_time}')
     YY=int(sys.argv[1])
 
-    icesheet='GrIS'
+    icesheet='AIS'
 
     if icesheet=='GrIS':
         lat_min=55

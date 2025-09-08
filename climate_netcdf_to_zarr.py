@@ -64,18 +64,18 @@ class make_zarr:
     def __init__(self):
         pass
 
-    def make_zarr(self,icesheet,LLbounds,out_path,d_in,saveZarr=True,saveBigNC=False,freq='1D'):
+    def make_zarr(self,icesheet,LLbounds,out_path,d_in,freq='1D',remap=True):
         
-        if freq=='1D':
-            freq_name = 'Daily'
+        if ((freq=='1D') or (freq=='1d')):
+            freq_name = 'daily'
         else:
             freq_name = freq
 
         dlist = [d_in]
         for decade in dlist:
             print(decade)
-            # zarr_name = Path(f'M2_{icesheet}_{freq_name}_IS2mc_{decade}0.zarr')
-            zarr_name = Path(f'M2_{icesheet}_{freq_name}_IS2mc_{decade}0_NOCONVOLUTION_NOCROP.zarr')
+            zarr_name = Path(f'M2_{icesheet}_{freq_name}_IS2mc_{decade}0.zarr')
+            # zarr_name = Path(f'M2_{icesheet}_{freq_name}_IS2mc_{decade}0_NOCONVOLUTION_NOCROP.zarr')
             # zarr_name = Path(f'LDAS_hr_{icesheet}_{freq_name}_IS2mc_{decade}0.zarr')
             zarr_dir  = Path(out_path,'zarr')
             zarr_dir.mkdir(parents=True,exist_ok=True)
@@ -92,12 +92,19 @@ class make_zarr:
                 print('zarr exists. will not remake.')
                 continue
 
-            netcdf_path = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}') # Path to yearly netcdfs that will go into zarr.
-            # netcdf_path = Path(f'/discover/nobackup/cdsteve2/climate/LDAS_highres/LDAS_outputs/{icesheet}') # Path to yearly netcdfs that will go into zarr.
+            if remap:
+                netcdf_path = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}') # Path to yearly netcdfs that will go into zarr.
+                # netcdf_path = Path(f'/discover/nobackup/cdsteve2/climate/LDAS_highres/LDAS_outputs/{icesheet}') # Path to yearly netcdfs that will go into zarr.
 
-            # allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,'netCDF/4h',f'*{icesheet}*{decade}*conv.nc'))))
-            allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,'netCDF/4h',f'*{icesheet}*{decade}*NOCROP.nc'))))
-            # allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,'netCDF/Daily',f'LDAS_{icesheet}*{decade}*.nc'))))
+                # allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,'netCDF/4h',f'*{icesheet}*{decade}*conv.nc'))))
+                allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,'netCDF/4h',f'*{icesheet}*{decade}*NOCROP.nc'))))
+                # allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,'netCDF/Daily',f'LDAS_{icesheet}*{decade}*.nc'))))
+            else:
+                netcdf_path = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/subsets/{icesheet}/{freq_name}') # Path to yearly netcdfs that will go into zarr.
+                print(netcdf_path)
+                
+                allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,f'*{icesheet}*{decade}*.nc'))))
+
             ### allYearlyFiles is a list of the netCDFs for a certain decade.
 
             with xr.open_mfdataset(allYearlyFiles,chunks=-1,parallel=True) as dsALL:            
@@ -114,7 +121,10 @@ class make_zarr:
                 for data_var in dsALL.data_vars:
                     dsALL[data_var].encoding['compressor']=None
                 
-                dsALL = dsALL.chunk({'y':2,'x':14,'time':-1})
+                if remap:
+                    dsALL = dsALL.chunk({'y':2,'x':14,'time':-1})
+                else:
+                    dsALL = dsALL.chunk({'lat':'auto','lon':'auto','time':-1})
                 zarr_out_fn = str(zarr_full) + '.zip'
                 print('starting zarr write')
                 now=time.time()
@@ -122,12 +132,66 @@ class make_zarr:
                 ttaken = time.time()-now
                 print(f'zarr written successfully in {ttaken} s')
 
+    def make_zarr_full(self,icesheet,LLbounds,out_path,freq='1D',remap=False):
+        
+        if ((freq=='1D') or (freq=='1d')):
+            freq_name = 'daily'
+        else:
+            freq_name = freq
+            
+        zarr_name = Path(f'M2_{icesheet}_{freq_name}_IS2mc.zarr')
+        zarr_dir  = Path(out_path,'zarr')
+        zarr_dir.mkdir(parents=True,exist_ok=True)
+
+        zarr_full = Path(zarr_dir,zarr_name)
+                
+        # if os.path.exists(zarr_full): 
+        #     print('zarr exists. will not remake.')
+        #     continue
+
+        if remap:
+            netcdf_path = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}') # Path to yearly netcdfs that will go into zarr.
+            allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,'netCDF/4h',f'*{icesheet}*NOCROP.nc'))))
+
+        else:
+            netcdf_path = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/subsets/{icesheet}/{freq_name}') # Path to yearly netcdfs that will go into zarr.
+            allYearlyFiles = sorted(glob.glob(str(Path(netcdf_path,f'*{icesheet}*.nc'))))
+            print(allYearlyFiles)
+
+        ### allYearlyFiles is a list of the netCDFs for a certain decade.
+
+        with xr.open_mfdataset(allYearlyFiles,chunks=-1,parallel=True) as dsALL:            
+            try:
+                dsALL = dsALL.drop_vars(['polar_Stereographic','spatial_ref'])
+            except:
+                pass
+            try:
+                for vv in ['TS_i','T2M_i','TScalc_i']:
+                    dsALL[vv] = dsALL[vv].transpose("time",'y','x') # this is an artifact of the netCDF-making process
+            except:
+                pass
+
+            for data_var in dsALL.data_vars:
+                dsALL[data_var].encoding['compressor']=None
+            
+            if remap:
+                dsALL = dsALL.chunk({'y':2,'x':14,'time':-1})
+            else:
+                dsALL = dsALL.chunk({'lat':'auto','lon':'auto','time':-1})
+            zarr_out_fn = str(zarr_full) + '.zip'
+            print('starting zarr write')
+            now=time.time()
+            dsALL.to_zarr(store=zarr_out_fn,mode='w',consolidated=True) # Be aware of where you are saving this; does not go to merra_path
+            ttaken = time.time()-now
+            print(f'zarr written successfully in {ttaken} s')
+
 if __name__ == '__main__':
     
-    icesheet='GrIS'
-    freq='4h'
-    # freq='1d'
-
+    icesheet='AIS'
+    # freq='4h'
+    freq='1d'
+    remap = False
+    
     try:
         dkey = int(sys.argv[1]) # this is the array value
     except:
@@ -148,12 +212,21 @@ if __name__ == '__main__':
     LLbounds = dict(((k,eval(k)) for k in ('lat_min','lat_max','lon_min','lon_max')))
 
     # out_path = Path(f'/discover/nobackup/projects/icesat2/firn/ATL_masschange/CFM_forcing/{icesheet}/')
-    out_path = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}')
+    if remap:
+        out_path = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}')
+    else:
+        out_path = Path(f'/discover/nobackup/cdsteve2/climate/MERRA2/subsets/{icesheet}')
     # out_path = Path(f'/discover/nobackup/cdsteve2/climate/LDAS_highres/LDAS_outputs/{icesheet}')
     
     dlist_in = ['198','199','200','201','202']
     d_in = dlist_in[dkey]
-    print(f'Now making zarr for {d_in}.')
+    
     MZ = make_zarr()
-    MZ.make_zarr(icesheet,LLbounds,out_path,d_in,freq=freq)
+    if remap:
+        print(f'Now making zarr for {d_in}.')
+        MZ.make_zarr(icesheet,LLbounds,out_path,d_in,freq=freq,remap=remap)
+    else:
+        print('making zarr for all years.')
+        MZ.make_zarr(icesheet,LLbounds,out_path,d_in,freq=freq,remap=remap)
+        # MZ.make_zarr_full(icesheet,LLbounds,out_path,freq=freq,remap=remap)
     print('Done!')

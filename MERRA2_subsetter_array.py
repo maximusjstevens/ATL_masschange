@@ -44,7 +44,7 @@ import h5py as h5
 import datetime
 import s3fs
 import xarray as xr
-import rioxarray as rx
+# import rioxarray as rx
 import pandas as pd
 import calendar
 import os
@@ -55,15 +55,15 @@ import time
 import pickle
 import re
 import dateutil.parser as dparser
-import pathlib
 import subprocess as sub
 from scipy.spatial import KDTree
 import cartopy.crs as ccrs
 import pyproj
 from rasterio.enums import Resampling
+from pathlib import Path
 
-import IS2view
-import rioxarray.merge
+# import IS2view
+# import rioxarray.merge
 
 class FQS:
     '''
@@ -452,8 +452,8 @@ class MERRA_concat:
         main function to open all files, optionally calculate melt, resample to freq, 
         and merge all into a single netCDF for each year.
         '''
-        if freq=='1D':
-            freq_name = 'Daily'
+        if ((freq=='1D') or (freq=='1d')):
+            freq_name = 'daily'
         else:
             freq_name = freq
 
@@ -471,14 +471,18 @@ class MERRA_concat:
         int_list = ['PRECCU','PRECLS','PRECSN']
         flx_list = ['EVAP','HFLUX','EFLUX','GHTSKIN','HLML'] # RHOA, SPEED, QLML, QSH, RISFC, TLML, TSH, Z0H, Z0M, CDH
         slv_list = ['T2M'] # PS, QV2M
-        glc_list = ['RUNOFF','ASNOW_GL']
+        glc_list = ['RUNOFF','ASNOW_GL','SNOMAS_GL']
     
         print(YY)
 
         ### Check if M2 data has already been subsetted.
 
-        dsALL_fn = f'M2_{icesheet}_{YY}.nc'
-        out_full_dsALL = pathlib.Path(subPath,dsALL_fn) #full output path + filename, conservative, pre-remap
+        dsALL_fn = f'M2_{icesheet}_{freq_name}_{YY}.nc' #output filename
+
+        out_path = Path(subPath,freq_name)
+        Path(out_path).mkdir(parents=True, exist_ok=True)
+        
+        out_full_dsALL = Path(out_path,dsALL_fn) #full output path + filename, conservative, pre-remap
         
         if os.path.exists(out_full_dsALL): # has been subsetted.
             print(f'{dsALL_fn} exists. Skipping MERRA-2 subset.')
@@ -493,7 +497,6 @@ class MERRA_concat:
             fns_int = sorted(glob.glob(merra_path+f'**/MERRA*tavg1_2d_int_Nx.{YY}*.nc4'))
             fns_flx = sorted(glob.glob(merra_path+f'**/MERRA*tavg1_2d_flx_Nx.{YY}*.nc4'))
             fns_slv = sorted(glob.glob(merra_path+f'**/MERRA*tavg1_2d_slv_Nx.{YY}*.nc4'))
-            # fns_glc = sorted(glob.glob(merra_path+f'**/MERRA*tavg3_2d_glc_Nx.{YY}*.nc4')) #Land ice
     
             ### concatenated datasets (i.e. all data for one year); these are hourly, geographically
             ### subsetted, and only contain the variables in the variable lists above
@@ -501,7 +504,10 @@ class MERRA_concat:
             ds_int = self.read_netcdfs(fns_int,lat_min, lat_max, lon_min, lon_max, int_list)
             ds_flx = self.read_netcdfs(fns_flx,lat_min, lat_max, lon_min, lon_max, flx_list)
             ds_slv = self.read_netcdfs(fns_slv,lat_min, lat_max, lon_min, lon_max, slv_list)
-            # ds_glc = self.read_netcdfs(fns_glc,lat_min, lat_max, lon_min, lon_max, glc_list)
+            
+            if freq=='1D':
+                fns_glc = sorted(glob.glob(merra_path+f'**/MERRA*tavg3_2d_glc_Nx.{YY}*.nc4')) #Land ice
+                ds_glc = self.read_netcdfs(fns_glc,lat_min, lat_max, lon_min, lon_max, glc_list)
     
             ### resample to freq resolution, keep attributes from original files
             ### (10/23 fixed from original, which had 1-albedo here)
@@ -534,6 +540,18 @@ class MERRA_concat:
                 else:
                     ds_slv_r[svar] = ds_slv[svar].resample(time = freq).mean()
                     ds_slv_r[svar].attrs = ds_slv[svar].attrs
+            
+            if freq=='1D':
+                for kk,gvar in enumerate(glc_list):
+                    if kk==0:
+                        ds_glc_r = ds_glc[gvar].resample(time=freq).mean().to_dataset()
+                    elif gvar == 'SNOMAS_GL':
+                        ds_glc_r[gvar] = ds_glc[gvar].resample(time=freq).last()
+                        ds_glc_r[gvar].attrs = ds_glc[gvar].attrs
+                    else:
+                        ds_glc_r[gvar] = ds_glc[gvar].resample(time=freq).mean()
+                        ds_glc_r[gvar].attrs = ds_glc[gvar].attrs
+                    
             ###
     
             ### Below code calculates surface melt and Tsurf using radiation fluxes ###
@@ -613,6 +631,8 @@ class MERRA_concat:
             ### merge all datasets into one
             ds_flx_r = ds_flx_r.drop_vars(['GHTSKIN'])
             dsALL = (((ds_int_r.merge(ds_rad_r)).merge(ds_flx_r)).merge(ds_slv_r))#.merge(ds_glc_r)
+            if freq=='1D':
+                dsALL = dsALL.merge(ds_glc_r)
             
             ### added this calculation from original script (10/23/24)
             sigma = 5.670374419e-8
@@ -643,9 +663,9 @@ class MERRA_concat:
 
 if __name__ == '__main__':
     
-    icesheet='GrIS'
+    icesheet='AIS'
     print(f'ice sheet is {icesheet}')
-    freq='4h'
+    freq='1D'
 
     if icesheet=='GrIS':
         lat_min=55
@@ -660,7 +680,7 @@ if __name__ == '__main__':
 
     LLbounds = dict(((k,eval(k)) for k in ('lat_min','lat_max','lon_min','lon_max')))
 
-    subPath = pathlib.Path(os.getenv('NOBACKUP'),f'climate/MERRA2/subsets/{icesheet}')
+    subPath = Path(os.getenv('NOBACKUP'),f'climate/MERRA2/subsets/{icesheet}')
     if os.path.exists(subPath):
         pass
     else:

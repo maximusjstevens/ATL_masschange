@@ -39,7 +39,7 @@ import os
 
 hh = socket.gethostname()
 global runloc
-if 'disc' in hh:
+if (('disc' in hh) or ('borg' in hh)):
     runloc = 'discover'
 elif (('gs615-meltwater' in hh) or ('ndc' in hh)):
     runloc = 'local'
@@ -113,7 +113,8 @@ def MERRA2_zarr_to_dataframe(y_int,x_int,icesheet,zarr_source=runloc):
             if icesheet=='GrIS':
                 zarr_path = Path("/discover/nobackup/cdsteve2/climate/MERRA2/remapped/GrIS/zarr")
             elif icesheet=='AIS':
-                zarr_path = Path("/discover/nobackup/projects/icesat2/firn/ATL_masschange/CFM_forcing/AIS/zarr")    
+                # zarr_path = Path("/discover/nobackup/projects/icesat2/firn/ATL_masschange/CFM_forcing/AIS/zarr")
+                zarr_path = Path("/discover/nobackup/cdsteve2/climate/MERRA2/remapped/AIS/zarr")
         elif zarr_source=='azure':
             if icesheet=='GrIS':
                 zarr_path = Path("/shared/home/cdsteve2/firnadls/CFM_inputs/GrIS/")
@@ -162,13 +163,14 @@ if __name__ == '__main__':
     # else:
     #     runloc = 'azure'
 
-    icesheet = 'GrIS'
-    quad = 'A1'
+    icesheet = 'AIS'
+    quad = 'periphery'
         
     seb = True
     LWdown_source = 'EMIS_eff' #EMIS_eff, MERRA2
     ALBEDO_source = 'M2_interp' #post, M2_interp
-     
+
+    ### runloc is defined as global at start of script.
     if runloc =='discover':
         CFM_path = Path('/discover/nobackup/cdsteve2/ATL_masschange/CommunityFirnModel/CFM_main')
     elif runloc == 'azure':
@@ -191,7 +193,7 @@ if __name__ == '__main__':
     if c['runloc'] == 'azure':
         zarr_source = 'azure'
         if icesheet=='AIS':
-            ll_list = np.genfromtxt(Path(CFM_path,f'IS2_pixelstorun_{icesheet}_{quad}_full.csv'),delimiter=',',skip_header=1)
+            ll_list = np.genfromtxt(Path(CFM_path,f'IS2_pixelstorun_{icesheet}_{quad}.csv'),delimiter=',',skip_header=1)
         elif icesheet=='GrIS':
             ll_list = np.genfromtxt(Path(CFM_path,f'IS2_pixelstorun_GrIS_periphery.csv'),delimiter=',',skip_header=1)
     
@@ -199,7 +201,7 @@ if __name__ == '__main__':
         zarr_source = 'discover'
         pixel_path = Path('/discover/nobackup/cdsteve2/ATL_masschange/pixels_to_run')
         if icesheet=='AIS':
-            ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}_full.csv'),delimiter=',',skip_header=1)
+            ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}.csv'),delimiter=',',skip_header=1)
         elif icesheet=='GrIS':
             ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}.csv'),delimiter=',',skip_header=1)        
 
@@ -229,6 +231,7 @@ if __name__ == '__main__':
     c['SEB'] = True
     calc_melt = False
     c['MELT'] = True
+    c['ReehCorrectedT'] = False
     
     c['physRho'] = "GSFC2020"
     c['spinUpdate'] = True
