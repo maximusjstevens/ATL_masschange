@@ -88,15 +88,16 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
 
     ########################
     hh = socket.gethostname()
-    if 'disc' in hh:
+    if (('disc' in hh) or ('borg' in hh)):
         runloc = 'discover'
     elif 'GS407' in hh:
         runloc = 'local'
     else:
         runloc = 'azure'
+    print(f'runloc: {runloc}')
     ########################
 
-    z_ext='.zarr'
+    z_ext='_260205.zarr'
 
     if runloc=='azure':
         if icesheet=='GrIS':
@@ -106,6 +107,11 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
             pt_path = Path(f'/shared/home/cdsteve2/CommunityFirnModel/CFM_main/IS2_pixelstorun_AIS_{quad}_full.csv')    
     elif runloc=='local':
         pt_path = Path('/Users/cdsteve2/research/ATL_masschange/IS2_icepixels.csv')
+    else: #discover
+        if icesheet=='GrIS':
+            pt_path = Path('/discover/nobackup/cdsteve2/ATL_masschange/pixels_to_run/IS2_pixelstorun_GrIS.csv')
+        elif icesheet=='AIS':
+            pt_path = Path('/discover/nobackup/cdsteve2/ATL_masschange/pixels_to_run/IS2_pixelstorun_AIS_periphery.csv')
 
     ##################################
     ### get x/y points
@@ -114,6 +120,19 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
     rw = M2pts[vv] #row with x/y pair in the points file
     xM = rw[0]
     yM = rw[1]
+
+    ### Custom add below to deal with AIS periphery
+    if xM>0:
+        if yM>0:
+            quad = 'A1'
+        else:
+            quad = 'A4'
+    else:
+        if yM>0:
+            quad = 'A2'
+        else:
+            quad = 'A3'
+    ### end custom
             
     if runloc=='azure':
         if icesheet=='AIS':
@@ -131,9 +150,29 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
         rdir = Path(f'/Users/cdsteve2/research/ATL_masschange/CFM_outputs')
         gridded_zarr_path = Path(f'/Users/cdsteve2/research/ATL_masschange/CFM_GrIS_gridded/{zarr_name}{z_ext}')
         ATLpath = Path(f'/Users/cdsteve2/research/ATL_masschange')
+
+    elif runloc=='discover':
+        if icesheet=='AIS':
+            # rdir = Path(f'/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/{icesheet}_{quad}')
+            rdir = Path(f'/discover/nobackup/projects/icesat2/firn/ATL_masschange/CFM_outputs/AIS_periphery/{icesheet}_{quad}')
+        else: # GrIS
+            rdir = Path(f'/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/{icesheet}')
+        
+        rmid = f'CFMresults_{icesheet}_{int(xM)}_{int(yM)}_GSFC2020_LW-EMIS_eff_ALB-M2_interp'
+
+        # gridded_zarr_path_1d = Path(f'/discover/nobackup/cdsteve2/ATL_masschange/CFM_gridded/{zarr_name}_1d{z_ext}') # path of the zarr store 
+        # gridded_zarr_path_5d = Path(f'/discover/nobackup/cdsteve2/ATL_masschange/CFM_gridded/{zarr_name}_5d{z_ext}') # path of the zarr store
+
+        gridded_zarr_path_1d = Path(f'/discover/nobackup/projects/icesat2/firn/ATL_masschange/CFM_gridded/{icesheet}/{zarr_name}_1d{z_ext}') # path of the zarr store  
+        gridded_zarr_path_5d = Path(f'/discover/nobackup/projects/icesat2/firn/ATL_masschange/CFM_gridded/{icesheet}/{zarr_name}_5d{z_ext}') # path of the zarr store 
         
     CFM_results_path = Path(rdir, rmid, 'CFMresults.hdf5')
     print(f'CFM_results_path is {CFM_results_path}')
+
+    if os.path.exists(CFM_results_path):
+        pass
+    else:
+        print(f'{CFM_results_path} does not exist.')
         
     ##################################
     ### make sure x/y points  
@@ -172,18 +211,38 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
             dti           = pd.date_range(start=_dti_m[0].round('D'),end=_dti_m[-1].round('D'),freq=f'{trez}D') # date times that are correctly rounded to the day.
 
             ###
-            SNOWFALL = ds_CFM_results['Modelclimate'][1:,1] # m i.e./year, includes deposition
-            SUBLIM   = ds_CFM_results['Modelclimate'][1:,5] # m i.e./year, is negative so should be added to SMB
-            RAIN     = ds_CFM_results['Modelclimate'][1:,4] # m i.e./year
-            RUNOFF   = ds_CFM_results['runoff'][1:,1]/0.917*stps_per_year # [m i.e./year]
-            SMELT    = ds_CFM_results['meltvol'][1:,1]/0.917*stps_per_year # [m i.e./year]
-            TS       = ds_CFM_results['Modelclimate'][1:,2] # K
-            FAC      = ds_CFM_results['DIP'][1:,1] # m
+            if 'Modelclimate' in _ds2.data_vars:
+                SNOWFALL = ds_CFM_results['Modelclimate'][1:,1] # m i.e./year, includes deposition
+                SUBLIM   = ds_CFM_results['Modelclimate'][1:,5] # m i.e./year, is negative so should be added to SMB
+                RAIN     = ds_CFM_results['Modelclimate'][1:,4] # m i.e./year
+                RUNOFF   = ds_CFM_results['runoff'][1:,1]/0.917*stps_per_year # [m i.e./year]
+                SMELT    = ds_CFM_results['meltvol'][1:,1]/0.917*stps_per_year # [m i.e./year]
+                TS       = ds_CFM_results['Modelclimate'][1:,2] # K
+                FAC      = ds_CFM_results['DIP'][1:,1] # m
+            else:
+                _fpath = Path(rdir, rmid, 'CFMforcing.hdf5',group='main')
+                with xr.open_dataset(_fpath) as _dsf:
+                    SNOWFALL = _dsf['BDOT'] + _dsf['SUBLIM'] # m i.e./year, includes deposition
+                    SUBLIM   = _dsf['SUBLIM'].where(_dsf['SUBLIM']<0,other=0.0)
+                    RAIN     = _dsf['RAIN']
+                    RUNOFF   = ds_CFM_results['runoff'][1:,1]/0.917*stps_per_year # [m i.e./year]
+                    SMELT    = ds_CFM_results['meltvol'][1:,1]/0.917*stps_per_year # [m i.e./year]
+                    _hh      = np.zeros(len(_dsf['TSKIN'].values))
+                    _hh[::5] = ds_CFM_results['temperature'][1:,1].values
+                    TS       = _ds1'TS'] = _hh
+                    FAC      = ds_CFM_results['DIP'][1:,1] # m            
+
+            ### LWC was written at 5d resolution to save space
+            LWC      = xr.DataArray(np.sum(ds_CFM_results['LWC'][1:,1:],axis=1), dims=['time']).assign_coords({'time':dti[0::5]}).reindex(time=dti)
             
             SMB         = (SNOWFALL+SUBLIM+RAIN-RUNOFF)/stps_per_year # m i.e./day
             SMB         = SMB.rename({SMB.dims[0]:'time'}).assign_coords(time=('time',dti))
-            SMB_RCImean = SMB.sel(time=slice('1980','2019')).mean() # m i.e./day
-            SMB_anomaly = (SMB-SMB_RCImean).cumsum() # m i.e.
+            if icesheet == 'GrIS':
+                rci_stop = 1995
+            else:
+                rci_stop = 2019
+            SMB_RCImean = SMB.sel(time=slice('1980',f'{rci_stop}')).mean(dim='time') # m i.e./day
+            SMB_anomaly = (SMB-SMB_RCImean).cumsum(dim='time') # m i.e.
             
             ds_CFM = SMB.to_dataset(name='SMB')
             ds_CFM['SMB_a']    = (('time'),SMB_anomaly.values) # m i.e.
@@ -194,6 +253,7 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
             ds_CFM['SMELT']    = (('time'),SMELT.values/stps_per_year) # m i.e./day
             ds_CFM['TS']       = (('time'),TS.values) # K
             ds_CFM['FAC']      = (('time'),FAC.values) # m
+            ds_CFM['LWC']      = (('time'),LWC.values) # m3
             ds_CFM['SMB_RCI']  = SMB_RCImean
             
         ds_CFM_1d = ds_CFM.sel(time=slice('2018',None))
@@ -323,17 +383,17 @@ if __name__ == '__main__':
     istart = ii*200
     iend = istart + 200 # +200 because arange below is non-inclusive, so array is e.g. 0-199, 200-399, etc.
     
-    # if icesheet=='GrIS': #OG
-    #     ### 20037 pixels
-    #     ### --array==0-99 for sbatch
-    #     if iend == 20000:
-    #         iend = 20037
+    if icesheet=='GrIS': #OG
+        ### 20037 pixels
+        ### --array==0-99 for sbatch
+        if iend == 20000:
+            iend = 20037
     
-    if icesheet=='GrIS':
-        ### periphery is 6662 pixels
-        ### --array==0-32 for sbatch
-        if iend == 6600:
-            iend = 6662
+    # if icesheet=='GrIS':
+    #     ### periphery is 6662 pixels
+    #     ### --array==0-32 for sbatch
+    #     if iend == 6600:
+    #         iend = 6662
     elif icesheet=='AIS':
         if quad=='A1':
             ### 35909 pixels

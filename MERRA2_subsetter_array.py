@@ -482,7 +482,7 @@ class MERRA_concat:
         out_path = Path(subPath,freq_name)
         Path(out_path).mkdir(parents=True, exist_ok=True)
         
-        out_full_dsALL = Path(out_path,dsALL_fn) #full output path + filename, conservative, pre-remap
+        out_full_dsALL = Path(out_path,dsALL_fn) #full output path + filename
         
         if os.path.exists(out_full_dsALL): # has been subsetted.
             print(f'{dsALL_fn} exists. Skipping MERRA-2 subset.')
@@ -665,7 +665,7 @@ if __name__ == '__main__':
     
     icesheet='AIS'
     print(f'ice sheet is {icesheet}')
-    freq='1D'
+    freq='4h'
 
     if icesheet=='GrIS':
         lat_min=55

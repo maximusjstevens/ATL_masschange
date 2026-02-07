@@ -163,7 +163,7 @@ if __name__ == '__main__':
     # else:
     #     runloc = 'azure'
 
-    icesheet = 'AIS'
+    icesheet = 'GrIS'
     quad = 'periphery'
         
     seb = True
@@ -203,7 +203,9 @@ if __name__ == '__main__':
         if icesheet=='AIS':
             ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}.csv'),delimiter=',',skip_header=1)
         elif icesheet=='GrIS':
-            ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}.csv'),delimiter=',',skip_header=1)        
+            fpixel = f'IS2_pixelstorun_{icesheet}_fill3.csv'
+            print(f'getting pixels from {fpixel}')
+            ll_list = np.genfromtxt(Path(pixel_path,fpixel),delimiter=',',skip_header=1)        
 
     elif c['runloc'] == 'local':
         zarr_source = runloc
@@ -253,7 +255,7 @@ if __name__ == '__main__':
         if icesheet=='AIS':
             c['resultspath'] = f'/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/{icesheet}_{quad}'
         elif icesheet=='GrIS':
-            c['resultspath'] = f'/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/{icesheet}'
+            c['resultspath'] = f'/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/{icesheet}_fill'
     elif runloc == 'local':
         if icesheet=='AIS':
             c['resultspath'] = f'/Users/cdsteve2/research/ATL_masschange/CFMoutputs/{icesheet}_{quad}'
@@ -325,6 +327,11 @@ if __name__ == '__main__':
         bdot_mean = (df_daily['BDOT']*df_spy/917).mean()
 
     print(f'bdot mean: {bdot_mean}')
+    if bdot_mean<0:
+        c['iceblock'] = True
+        c['iceblock_rho'] = 850
+    else:
+        c['iceblock'] = False
 
     #######
 
@@ -397,8 +404,16 @@ if __name__ == '__main__':
     ####
     print(f'depth 1: {c["grid1bottom"]}')
     print(f'depth 2: {c["grid2bottom"]}')
+
+    if len(sys.argv)>2:
+        if sys.argv[2]=='-n':
+            c["NewSpin"] = True
+        else:
+            c["NewSpin"] = False
+    else:
+        c["NewSpin"] = False
     
-    c["NewSpin"] = False
+    c["truncate_outputs"] = True # write matrix outputs every 5 days.
 
     configName = f'CFMconfig_{icesheet}_{int(x_int)}_{int(y_int)}_{c["physRho"]}_LW-{LWdown_source}_ALB-{ALBEDO_source}.json'
     if runloc != 'local':

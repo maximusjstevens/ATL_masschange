@@ -73,7 +73,7 @@ def grid_CFM(zarr_name, icesheet, azure_drive='firnadls'):
     
     ##########################
     
-    z_ext='.zarr'
+    z_ext='_260205.zarr'
  
     zarr_name_1d = f'{zarr_name}_1d{z_ext}'
     zarr_name_5d = f'{zarr_name}_5d{z_ext}'
@@ -87,13 +87,14 @@ def grid_CFM(zarr_name, icesheet, azure_drive='firnadls'):
     
     elif runloc=='local':
         rdir      = Path(f'/Users/cdsteve2/research/ATL_masschange/CFM_outputs')
-        grid_path = Path(f'/Users/cdsteve2/research/ATL_masschange/CFM_GrIS_gridded/')
+        grid_path = Path(f'/Users/cdsteve2/research/ATL_masschange/CFM_GrIS_gridded/AIS')
         ATLpath   = Path(f'/Users/cdsteve2/research/ATL_masschange')
 
     elif runloc=='discover':
         rdir      = Path(f'/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs')
-        grid_path = Path(f'/discover/nobackup/cdsteve2/ATL_masschange/CFM_gridded/')
-        ATLpath   = Path(f'/discover/nobackup/cdsteve2/ATL_masschange/ATL')
+        # grid_path = Path(f'/discover/nobackup/cdsteve2/ATL_masschange/CFM_gridded/')
+        grid_path = Path(f'/discover/nobackup/projects/icesat2/firn/ATL_masschange/CFM_gridded/{icesheet}')
+        ATLpath   = Path(f'/discover/nobackup/cdsteve2/IS2_data/ATL15')
 
     gridded_zarr_path_1d = Path(grid_path,f'{zarr_name_1d}') #path of the (to be created) zarr store
     gridded_zarr_path_5d = Path(grid_path,f'{zarr_name_5d}') #path of the (to be created) zarr store
@@ -118,16 +119,19 @@ def grid_CFM(zarr_name, icesheet, azure_drive='firnadls'):
             # f_CFMresults = '/mnt/firnadls/CFM_outputs/GrIS/CFMresults_-65000_-1315000_GSFC2020_LW-EMIS_eff_ALB-M2_interp/CFMresults.hdf5'
         elif icesheet == 'AIS':
             f_glob = glob.glob('/mnt/firnadls/CFM_outputs/AIS_A1/*/CFMresults.hdf5')
-            f_CFMresults = fglob[1]
+            f_CFMresults = f_glob[1]
             # f_CFMresults = '/mnt/firnadls/CFM_outputs/AIS_A1/CFMresults_A1_2936_GSFC2020_LW-EMIS_eff_ALB-M2_interp/CFMresults.hdf5'
     elif runloc == 'discover':
         if icesheet == 'GrIS':
-            f_CFMresults = '/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/CFMresults_GrIS_-65000_-1315000_GSFC2020_LW-EMIS_eff_ALB-M2_interp/CFMresults.hdf5'
+            f_CFMresults = '/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/GrIS/CFMresults_GrIS_-65000_-1315000_GSFC2020_LW-EMIS_eff_ALB-M2_interp/CFMresults.hdf5'
         elif icesheet == 'AIS':
-            f_CFMresults = '/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/AIS/A1/CFMresults_A1_20011_GSFC2020_LW-EMIS_eff_ALB-M2_interp/CFMresults.hdf5'
+            f_glob = glob.glob('/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/AIS_A1/*/CFMresults.hdf5')
+            f_CFMresults = f_glob[1]
+            # f_CFMresults = '/discover/nobackup/cdsteve2/ATL_masschange/CFMoutputs/AIS_A1/CFMresults_A1_20011_GSFC2020_LW-EMIS_eff_ALB-M2_interp/CFMresults.hdf5'
     ###############################
 
     ###############################
+    print(f_CFMresults)
     with xr.open_dataset(f_CFMresults) as _CFMresults:
         tvec = _CFMresults['DIP'][1:,0].values # vector of times in the results
         dti  = pd.DatetimeIndex(decyeartodatetime(tvec,rounddate=False)) # datetime index
@@ -154,13 +158,13 @@ def grid_CFM(zarr_name, icesheet, azure_drive='firnadls'):
         with xr.open_dataset(Path(ATLpath,ATL_file)) as ATL15:
             x_g = ATL15.x.values
             y_g = ATL15.y.values
-        if runloc=='discover':
-            x_int = 1255000.
-            y_int = -1505000.
-            _ix   = np.where(x_g==x_int)[0][0]
-            _iy   = np.where(y_g==y_int)[0][0]
-            x_g   = x_g[_ix-10:_ix+10]
-            y_g   = y_g[_iy-10:_iy+10]
+        # if runloc=='discover':
+        #     x_int = 1255000.
+        #     y_int = -1505000.
+        #     _ix   = np.where(x_g==x_int)[0][0]
+        #     _iy   = np.where(y_g==y_int)[0][0]
+        #     x_g   = x_g[_ix-10:_ix+10]
+        #     y_g   = y_g[_iy-10:_iy+10]
             
     filler_xy = (-9999*np.ones((len(x_g), len(y_g)))).astype('float32')
     ###############################
@@ -181,6 +185,7 @@ def grid_CFM(zarr_name, icesheet, azure_drive='firnadls'):
             RUNOFF   = (["x","y","time"], filler_5d, {'units':'m i.e./day'}),
             SMELT    = (["x","y","time"], filler_5d, {'units':'m i.e./day'}),
             TS       = (["x","y","time"], filler_5d, {'units':'K'}),
+            LWC      = (["x","y","time"], filler_5d, {'units':'m3'}),
             SMB_RCI  = (["x","y"], filler_xy, {'units':'m i.e./day'}),
         ),
     coords=dict(
@@ -211,6 +216,7 @@ def grid_CFM(zarr_name, icesheet, azure_drive='firnadls'):
             RUNOFF   = (["x","y","time"], filler_1d, {'units':'m i.e./day'}),
             SMELT    = (["x","y","time"], filler_1d, {'units':'m i.e./day'}),
             TS       = (["x","y","time"], filler_1d, {'units':'K'}),
+            LWC      = (["x","y","time"], filler_1d, {'units':'m3'}),
             SMB_RCI  = (["x","y"], filler_xy, {'units':'m i.e./day'}),
         ),
     coords=dict(
