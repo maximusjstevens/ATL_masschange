@@ -97,7 +97,7 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
     print(f'runloc: {runloc}')
     ########################
 
-    z_ext='_260205.zarr'
+    z_ext='_260209.zarr'
 
     if runloc=='azure':
         if icesheet=='GrIS':
@@ -109,7 +109,7 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
         pt_path = Path('/Users/cdsteve2/research/ATL_masschange/IS2_icepixels.csv')
     else: #discover
         if icesheet=='GrIS':
-            pt_path = Path('/discover/nobackup/cdsteve2/ATL_masschange/pixels_to_run/IS2_pixelstorun_GrIS.csv')
+            pt_path = Path('/discover/nobackup/cdsteve2/ATL_masschange/pixels_to_run/IS2_pixelstorun_GrIS_fill2.csv')
         elif icesheet=='AIS':
             pt_path = Path('/discover/nobackup/cdsteve2/ATL_masschange/pixels_to_run/IS2_pixelstorun_AIS_periphery.csv')
 
@@ -204,14 +204,14 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
         
         with xr.open_dataset(CFM_results_path) as ds_CFM_results:
             ### time stuff:
-            _dectime      = ds_CFM_results['Modelclimate'][1:,0].load() #decimal time from CFMresults. 
+            _dectime      = ds_CFM_results['DIP'][1:,0].load() #decimal time from CFMresults. 
             stps_per_year = 1/(_dectime.diff(dim='phony_dim_0').mean()).values 
             _dti_m        = pd.DatetimeIndex(decyeartodatetime(_dectime.values.astype('float64'),rounddate=False)) # datetime index
             trez          = round((np.diff(_dti_m).mean()/1e9).astype(float)/86400) # resolution of the outputs in days
             dti           = pd.date_range(start=_dti_m[0].round('D'),end=_dti_m[-1].round('D'),freq=f'{trez}D') # date times that are correctly rounded to the day.
 
             ###
-            if 'Modelclimate' in _ds2.data_vars:
+            if 'Modelclimate' in ds_CFM_results.data_vars:
                 SNOWFALL = ds_CFM_results['Modelclimate'][1:,1] # m i.e./year, includes deposition
                 SUBLIM   = ds_CFM_results['Modelclimate'][1:,5] # m i.e./year, is negative so should be added to SMB
                 RAIN     = ds_CFM_results['Modelclimate'][1:,4] # m i.e./year
@@ -220,8 +220,9 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
                 TS       = ds_CFM_results['Modelclimate'][1:,2] # K
                 FAC      = ds_CFM_results['DIP'][1:,1] # m
             else:
-                _fpath = Path(rdir, rmid, 'CFMforcing.hdf5',group='main')
-                with xr.open_dataset(_fpath) as _dsf:
+                _fpath = Path(rdir, rmid, 'CFMforcing.hdf5')
+                with xr.open_dataset(_fpath, group='main') as _dsf:
+                    _dsf     = _dsf.rename_dims({'phony_dim_1':'phony_dim_0'})
                     SNOWFALL = _dsf['BDOT'] + _dsf['SUBLIM'] # m i.e./year, includes deposition
                     SUBLIM   = _dsf['SUBLIM'].where(_dsf['SUBLIM']<0,other=0.0)
                     RAIN     = _dsf['RAIN']
@@ -229,7 +230,8 @@ def grid_CFM(zarr_name, icesheet, vv, quad, zipzarr=False, azure_drive='firnadls
                     SMELT    = ds_CFM_results['meltvol'][1:,1]/0.917*stps_per_year # [m i.e./year]
                     _hh      = np.zeros(len(_dsf['TSKIN'].values))
                     _hh[::5] = ds_CFM_results['temperature'][1:,1].values
-                    TS       = _ds1'TS'] = _hh
+                    _dsf['TS'] = (('phony_dim_0'),_hh)
+                    TS       = _dsf['TS']
                     FAC      = ds_CFM_results['DIP'][1:,1] # m            
 
             ### LWC was written at 5d resolution to save space

@@ -203,7 +203,7 @@ if __name__ == '__main__':
         if icesheet=='AIS':
             ll_list = np.genfromtxt(Path(pixel_path,f'IS2_pixelstorun_{icesheet}_{quad}.csv'),delimiter=',',skip_header=1)
         elif icesheet=='GrIS':
-            fpixel = f'IS2_pixelstorun_{icesheet}_fill3.csv'
+            fpixel = f'IS2_pixelstorun_{icesheet}.csv'
             print(f'getting pixels from {fpixel}')
             ll_list = np.genfromtxt(Path(pixel_path,fpixel),delimiter=',',skip_header=1)        
 

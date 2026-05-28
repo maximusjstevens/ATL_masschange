@@ -188,14 +188,14 @@ class make_zarr:
 if __name__ == '__main__':
     
     icesheet='AIS'
-    # freq='4h'
-    freq='1d'
-    remap = False
+    freq='4h'
+    # freq='1d'
+    remap = True
     
     try:
         dkey = int(sys.argv[1]) # this is the array value
     except:
-        dkey = 0
+        dkey = -1
         print(f'no decade specified; using {dkey}') 
     
     if icesheet=='GrIS':

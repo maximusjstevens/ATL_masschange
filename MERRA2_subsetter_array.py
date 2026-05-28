@@ -477,7 +477,8 @@ class MERRA_concat:
 
         ### Check if M2 data has already been subsetted.
 
-        dsALL_fn = f'M2_{icesheet}_{freq_name}_{YY}.nc' #output filename
+        # dsALL_fn = f'M2_{icesheet}_{freq_name}_{YY}.nc' #output filename
+        dsALL_fn = f'M2_{icesheet}_{YY}.nc' #output filename
 
         out_path = Path(subPath,freq_name)
         Path(out_path).mkdir(parents=True, exist_ok=True)
@@ -663,7 +664,7 @@ class MERRA_concat:
 
 if __name__ == '__main__':
     
-    icesheet='AIS'
+    icesheet='GrIS'
     print(f'ice sheet is {icesheet}')
     freq='4h'
 
@@ -687,7 +688,10 @@ if __name__ == '__main__':
         os.makedirs(subPath)
     year_list = np.genfromtxt('M2_years.txt')
     ykey = int(sys.argv[1])
-    YY = int(year_list[ykey])
+    if ykey<1000: # if getting year from list using position in list
+        YY = int(year_list[ykey])
+    else: #if supplying year straight from command line
+        YY = ykey 
     Mc = MERRA_concat()
     Mc.M2combine(icesheet,LLbounds,subPath,YY,freq=freq)
     print(f'Done with making yearly files with {freq} resolution.')

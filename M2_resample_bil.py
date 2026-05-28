@@ -83,7 +83,7 @@ class cdo_bil:
         # elif icesheet=='GrIS':
         #     atl15 = xr.open_dataset('/discover/nobackup/cdsteve2/IS2_data/ATL15/ATL15_GL_0324_10km_004_03.nc',group='delta_h')
         
-        all_file = f'/discover/nobackup/cdsteve2/climate/MERRA2/subsets/{icesheet}/M2_{icesheet}_{YY}.nc'
+        all_file = f'/discover/nobackup/cdsteve2/climate/MERRA2/subsets/{icesheet}/4h/M2_{icesheet}_{YY}.nc'
         infile = f'/discover/nobackup/cdsteve2/climate/MERRA2/remapped/{icesheet}/netCDF/4h/M2_{icesheet}_{YY}_crop_temp.nc'
 
         with xr.open_dataset(all_file) as af_in:

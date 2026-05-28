@@ -73,7 +73,7 @@ def grid_CFM(zarr_name, icesheet, azure_drive='firnadls'):
     
     ##########################
     
-    z_ext='_260205.zarr'
+    z_ext='_260209.zarr'
  
     zarr_name_1d = f'{zarr_name}_1d{z_ext}'
     zarr_name_5d = f'{zarr_name}_5d{z_ext}'
